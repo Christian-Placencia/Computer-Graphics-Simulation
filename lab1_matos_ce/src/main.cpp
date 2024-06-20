@@ -183,7 +183,7 @@ int main() {
             glBindVertexArray(VAO[1]);
             glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorSquare);
             glDrawArrays(GL_LINE_LOOP, 0, 4);
-            glDrawArrays(fillShape ? GL_QUADS : GL_LINE_LOOP, 0, 4);
+            glDrawArrays(fillShape ? GL_TRIANGLE_FAN : GL_LINE_LOOP, 0, 4);
         }
         if (drawHexagon) {
             glBindVertexArray(VAO[2]);
