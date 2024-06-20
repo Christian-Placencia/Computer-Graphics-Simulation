@@ -17,7 +17,7 @@ bbenes@purdue.edu
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
-GLuint VAO[2], VBO[2];
+GLuint VAO[3], VBO[3];
 
 int CompileShaders() {
     // Vertex Shader
@@ -82,12 +82,12 @@ void BuildScene(GLuint& VBO, GLuint& VAO, int shape) {
     }
     else if (shape == 2) {  // Hexagon
         float tempVertices[] = {
-			-0.5f, -0.5f, 0.0f,
-			 0.5f, -0.5f, 0.0f,
-			 0.75f,  0.0f, 0.0f,
-			 0.5f,  0.5f, 0.0f,
-			-0.5f,  0.5f, 0.0f,
-			-0.75f,  0.0f, 0.0f
+			-0.25f, -0.5f, 0.0f,
+			 0.25f, -0.5f, 0.0f,
+			 0.5f,  0.0f, 0.0f,
+			 0.25f,  0.5f, 0.0f,
+			-0.25f,  0.5f, 0.0f,
+			-0.5f,  0.0f, 0.0f
         };
         memcpy(vertices, tempVertices, sizeof(tempVertices));
     }
@@ -139,7 +139,6 @@ int main() {
     bool drawTriangle = true;
     bool drawSquare = false;  // Initially set to false
 	bool drawHexagon = false;  // Initially set to false
-    bool showBoth = false;  // Variable to control showing both figures
     float scale = 1.0f;
 	float translation_x = 0.0f;
 	float translation_y = 0.0f;
@@ -163,31 +162,20 @@ int main() {
 
         glUseProgram(shaderProg);
 
-        if (showBoth) {
+        if (drawTriangle) {
             glBindVertexArray(VAO[0]);
             glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorTriangle);
             glDrawArrays(GL_LINE_LOOP, 0, 3);
-
+        }
+        if (drawSquare) {
             glBindVertexArray(VAO[1]);
             glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorSquare);
             glDrawArrays(GL_LINE_LOOP, 0, 4);
         }
-        else {
-            if (drawTriangle) {
-                glBindVertexArray(VAO[0]);
-                glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorTriangle);
-                glDrawArrays(GL_LINE_LOOP, 0, 3);
-            }
-            else if (drawSquare) {
-                glBindVertexArray(VAO[1]);
-                glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorSquare);
-                glDrawArrays(GL_LINE_LOOP, 0, 4);
-            }
-			else if (drawHexagon) {
-                glBindVertexArray(VAO[2]);
-                glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorHexagon);
-                glDrawArrays(GL_LINE_LOOP, 0, 6);
-			}
+        if (drawHexagon) {
+            glBindVertexArray(VAO[2]);
+            glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorHexagon);
+            glDrawArrays(GL_LINE_LOOP, 0, 6);
         }
 
         ImGui::Begin("CS 535");
@@ -195,7 +183,6 @@ int main() {
         ImGui::Checkbox("Draw Triangle", &drawTriangle);
         ImGui::Checkbox("Draw Square", &drawSquare);
 		ImGui::Checkbox("Draw Hexagon", &drawHexagon);
-        ImGui::Checkbox("Show Both", &showBoth);
         ImGui::SliderFloat("Scale", &scale, -3.0f, 3.0f);
         ImGui::SliderFloat("Translation x", &translation_x, -3.0f, 3.0f);
         ImGui::SliderFloat("Translation y", &translation_y, -3.0f, 3.0f);
