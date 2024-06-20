@@ -24,9 +24,11 @@ int CompileShaders() {
     const char* vsSrc = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
         "uniform float scale;\n"
+		"uniform float translation_x;\n"
+		"uniform float translation_y;\n"
         "void main()\n"
         "{\n"
-        "   gl_Position = vec4(scale * aPos.x, scale * aPos.y, scale * aPos.z, 1.0);\n"
+        "   gl_Position = vec4(scale * (aPos.x + translation_x), scale * (aPos.y + translation_y), scale * aPos.z, 1.0);\n"
         "}\0";
 
     // Fragment Shader
