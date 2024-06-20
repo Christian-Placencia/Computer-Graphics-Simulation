@@ -80,6 +80,17 @@ void BuildScene(GLuint& VBO, GLuint& VAO, int shape) {
         };
         memcpy(vertices, tempVertices, sizeof(tempVertices));
     }
+    else if (shape == 2) {  // Hexagon
+        float tempVertices[] = {
+			-0.5f, -0.5f, 0.0f,
+			 0.5f, -0.5f, 0.0f,
+			 0.75f,  0.0f, 0.0f,
+			 0.5f,  0.5f, 0.0f,
+			-0.5f,  0.5f, 0.0f,
+			-0.75f,  0.0f, 0.0f
+        };
+        memcpy(vertices, tempVertices, sizeof(tempVertices));
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -127,15 +138,21 @@ int main() {
 
     bool drawTriangle = true;
     bool drawSquare = false;  // Initially set to false
+	bool drawHexagon = false;  // Initially set to false
     bool showBoth = false;  // Variable to control showing both figures
     float scale = 1.0f;
+	float translation_x = 0.0f;
+	float translation_y = 0.0f;
+	float rotation = 0.0f;
     float colorTriangle[4] = { 0.2f, 0.2f, 0.8f, 1.0f };  // Color for triangle
     float colorSquare[4] = { 0.8f, 0.2f, 0.2f, 1.0f };  // Color for square
+	float colorHexagon[4] = { 0.2f, 0.8f, 0.2f, 1.0f };  // Color for hexagon
 
     glfwSetKeyCallback(window, KbdCallback);
 
     BuildScene(VBO[0], VAO[0], 0);  // Triangle
     BuildScene(VBO[1], VAO[1], 1);  // Square
+    BuildScene(VBO[2], VAO[2], 2);  // Hexagon
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -166,16 +183,26 @@ int main() {
                 glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorSquare);
                 glDrawArrays(GL_LINE_LOOP, 0, 4);
             }
+			else if (drawHexagon) {
+                glBindVertexArray(VAO[2]);
+                glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorHexagon);
+                glDrawArrays(GL_LINE_LOOP, 0, 6);
+			}
         }
 
         ImGui::Begin("CS 535");
         ImGui::Text("Let there be OpenGL!");
         ImGui::Checkbox("Draw Triangle", &drawTriangle);
         ImGui::Checkbox("Draw Square", &drawSquare);
+		ImGui::Checkbox("Draw Hexagon", &drawHexagon);
         ImGui::Checkbox("Show Both", &showBoth);
         ImGui::SliderFloat("Scale", &scale, -3.0f, 3.0f);
+        ImGui::SliderFloat("Translation x", &translation_x, -3.0f, 3.0f);
+        ImGui::SliderFloat("Translation y", &translation_y, -3.0f, 3.0f);
+        ImGui::SliderFloat("Rotate", &rotation, -3.0f, 3.0f);
         ImGui::ColorEdit4("Triangle Color", colorTriangle);
         ImGui::ColorEdit4("Square Color", colorSquare);
+        ImGui::ColorEdit4("Hexagon Color", colorHexagon);
         ImGui::End();
 
         glUniform1f(glGetUniformLocation(shaderProg, "scale"), scale);
