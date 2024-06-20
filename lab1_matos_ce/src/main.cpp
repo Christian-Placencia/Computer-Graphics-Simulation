@@ -42,6 +42,7 @@ int CompileShaders() {
     const char* fsSrc = "#version 330 core\n"
         "out vec4 col;\n"
         "uniform vec4 color;\n"
+		"uniform bool fillShape;\n"
         "void main()\n"
         "{\n"
         "   col = color;\n"
@@ -155,6 +156,7 @@ int main() {
     float colorTriangle[4] = { 0.2f, 0.2f, 0.8f, 1.0f };  // Color for triangle
     float colorSquare[4] = { 0.8f, 0.2f, 0.2f, 1.0f };  // Color for square
 	float colorHexagon[4] = { 0.2f, 0.8f, 0.2f, 1.0f };  // Color for hexagon
+	bool fillShape = false;
 
     glfwSetKeyCallback(window, KbdCallback);
 
@@ -175,16 +177,19 @@ int main() {
             glBindVertexArray(VAO[0]);
             glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorTriangle);
             glDrawArrays(GL_LINE_LOOP, 0, 3);
+            glDrawArrays(fillShape ? GL_TRIANGLES : GL_LINE_LOOP, 0, 3);
         }
         if (drawSquare) {
             glBindVertexArray(VAO[1]);
             glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorSquare);
             glDrawArrays(GL_LINE_LOOP, 0, 4);
+            glDrawArrays(fillShape ? GL_QUADS : GL_LINE_LOOP, 0, 4);
         }
         if (drawHexagon) {
             glBindVertexArray(VAO[2]);
             glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorHexagon);
             glDrawArrays(GL_LINE_LOOP, 0, 6);
+            glDrawArrays(fillShape ? GL_POLYGON : GL_LINE_LOOP, 0, 6);
         }
 
         ImGui::Begin("CS 535");
@@ -192,6 +197,7 @@ int main() {
         ImGui::Checkbox("Draw Triangle", &drawTriangle);
         ImGui::Checkbox("Draw Square", &drawSquare);
 		ImGui::Checkbox("Draw Hexagon", &drawHexagon);
+		ImGui::Checkbox("Fill Shape", &fillShape);
         ImGui::SliderFloat("Scale", &scale, -3.0f, 3.0f);
         ImGui::SliderFloat("Translation x", &translation_x, -3.0f, 3.0f);
         ImGui::SliderFloat("Translation y", &translation_y, -3.0f, 3.0f);
@@ -205,6 +211,8 @@ int main() {
         glUniform1f(glGetUniformLocation(shaderProg, "translation_x"), translation_x);
         glUniform1f(glGetUniformLocation(shaderProg, "translation_y"), translation_y);
         glUniform1f(glGetUniformLocation(shaderProg, "rotation"), rotation);
+
+        glUniform1f(glGetUniformLocation(shaderProg, "fillShape"), fillShape);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
