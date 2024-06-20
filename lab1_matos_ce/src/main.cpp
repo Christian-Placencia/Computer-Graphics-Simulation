@@ -29,7 +29,13 @@ int CompileShaders() {
 		"uniform float rotation;\n"
         "void main()\n"
         "{\n"
-        "   gl_Position = vec4(scale * (aPos.x + translation_x), scale * (aPos.y + translation_y), scale * aPos.z, 1.0);\n"
+        "   float cosTheta = cos(rotation);\n"
+        "   float sinTheta = sin(rotation);\n"
+        "   vec3 rotatedPos;\n"
+        "   rotatedPos.x = aPos.x * cosTheta - aPos.y * sinTheta;\n"
+        "   rotatedPos.y = aPos.x * sinTheta + aPos.y * cosTheta;\n"
+        "   rotatedPos.z = aPos.z;\n"
+        "   gl_Position = vec4(scale * (rotatedPos.x + translation_x), scale * (rotatedPos.y + translation_y), scale * rotatedPos.z, 1.0);\n"
         "}\0";
 
     // Fragment Shader
