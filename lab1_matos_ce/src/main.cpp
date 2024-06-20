@@ -9,7 +9,6 @@ bbenes@purdue.edu
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-
 #include <iostream>
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
@@ -18,197 +17,180 @@ bbenes@purdue.edu
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
-
-//Vertex array object and vertex buffer object indices 
-GLuint VAO, VBO;
-
+GLuint VAO[2], VBO[2];
 
 int CompileShaders() {
-	//Vertex Shader
-	const char* vsSrc= "#version 330 core\n"
-		"layout (location = 0) in vec3 aPos;\n"
-		"uniform float scale;\n"
-		"void main()\n"
-		"{\n"
-		"   gl_Position = vec4(scale* aPos.x, scale* aPos.y, scale* aPos.z, 1.0);\n"
-		"}\0";
+    // Vertex Shader
+    const char* vsSrc = "#version 330 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "uniform float scale;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_Position = vec4(scale * aPos.x, scale * aPos.y, scale * aPos.z, 1.0);\n"
+        "}\0";
 
-	//Fragment Shader
-	const char* fsSrc = "#version 330 core\n"
-		"out vec4 col;\n"
-		"uniform vec4 color;\n"
-		"void main()\n"
-		"{\n"
-		"   col = color;\n"
-		"}\n\0";
+    // Fragment Shader
+    const char* fsSrc = "#version 330 core\n"
+        "out vec4 col;\n"
+        "uniform vec4 color;\n"
+        "void main()\n"
+        "{\n"
+        "   col = color;\n"
+        "}\n\0";
 
-	//Create VS object
-	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-	//Attach VS src to the Vertex Shader Object
-	glShaderSource(vs, 1, &vsSrc, NULL);
-	//Compile the vs
-	glCompileShader(vs);
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs, 1, &vsSrc, NULL);
+    glCompileShader(vs);
 
-	//The same for FS
-	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fs, 1, &fsSrc, NULL);
-	glCompileShader(fs);
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs, 1, &fsSrc, NULL);
+    glCompileShader(fs);
 
-	//Get shader program object
-	GLuint shaderProg = glCreateProgram();
-	//Attach both vs and fs
-	glAttachShader(shaderProg, vs);
-	glAttachShader(shaderProg, fs);
-	//Link all
-	glLinkProgram(shaderProg);
+    GLuint shaderProg = glCreateProgram();
+    glAttachShader(shaderProg, vs);
+    glAttachShader(shaderProg, fs);
+    glLinkProgram(shaderProg);
 
-	//Clear the VS and FS objects
-	glDeleteShader(vs);
-	glDeleteShader(fs);
-	return shaderProg;
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+    return shaderProg;
 }
 
-void BuildScene(GLuint& VBO, GLuint& VAO) { //return VBO and VAO values
-	// Vertices coordinates
-	const float K = 0.5f;
-	glm::vec3 vertices[] =
-	{
-		glm::vec3(-K, -K, 0.0f ),
-		glm::vec3(K, -K, 0.0f),
-		glm::vec3(0,  K, 0.0f)
-	};
+void BuildScene(GLuint& VBO, GLuint& VAO, int shape) {
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
 
-	//make VAO
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
+    float vertices[100 * 3];
 
-	//bind it
-	glBindVertexArray(VAO);
+    if (shape == 0) {  // Triangle
+        float tempVertices[] = {
+            -0.5f, -0.5f, 0.0f,
+             0.5f, -0.5f, 0.0f,
+             0.0f,  0.5f, 0.0f
+        };
+        memcpy(vertices, tempVertices, sizeof(tempVertices));
+    }
+    else if (shape == 1) {  // Square
+        float tempVertices[] = {
+            -0.5f, -0.5f, 0.0f,
+             0.5f, -0.5f, 0.0f,
+             0.5f,  0.5f, 0.0f,
+            -0.5f,  0.5f, 0.0f
+        };
+        memcpy(vertices, tempVertices, sizeof(tempVertices));
+    }
 
-	//bind the VBO
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	//send the data to the GPU
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	//Configure the attributes
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	//Make it valid
-	glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
-	//Bind both the VBO and VAO
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
-//Quit when ESC is released
-static void KbdCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) glfwSetWindowShouldClose(window, GLFW_TRUE);
+static void KbdCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+int main() {
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-int main()
-{
-	glfwInit();
+    GLFWwindow* window = glfwCreateWindow(800, 800, "Simple", NULL, NULL);
+    if (window == NULL) {
+        std::cout << "Cannot open GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
+    gladLoadGL();
+    glViewport(0, 0, 800, 800);
 
-	//negotiate with OpenGL
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    int shaderProg = CompileShaders();
 
-	//make OpenGL windo
-	GLFWwindow* window = glfwCreateWindow(800, 800, "Simple", NULL, NULL);
-	//is all OK?
-	if (window == NULL)
-	{
-		std::cout << "Cannot open GLFW window" << std::endl;
-		glfwTerminate();
-		return -1;
-	}
-	//Paste the window to the current context
-	glfwMakeContextCurrent(window);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glUseProgram(shaderProg);
+    glPointSize(5);
+    glLineWidth(5);
 
-	//Load GLAD to configure OpenGL
-	gladLoadGL();
-	//Set the viewport
-	glViewport(0, 0, 800, 800);
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
 
-	//once the OpenGL context is done, build the scene and compile shaders
-	BuildScene(VBO, VAO);
-	int shaderProg = CompileShaders();
+    bool drawTriangle = true;
+    bool drawSquare = false;  // Initially set to false
+    bool showBoth = false;  // Variable to control showing both figures
+    float scale = 1.0f;
+    float colorTriangle[4] = { 0.2f, 0.2f, 0.8f, 1.0f };  // Color for triangle
+    float colorSquare[4] = { 0.8f, 0.2f, 0.2f, 1.0f };  // Color for square
 
-	//Backg color
-	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-	//Use shader
-	glUseProgram(shaderProg);
-	//Bind the VAO
-	glBindVertexArray(VAO);
-	glPointSize(5);
+    glfwSetKeyCallback(window, KbdCallback);
 
-	// Initialize ImGUI
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 330");
+    BuildScene(VBO[0], VAO[0], 0);  // Triangle
+    BuildScene(VBO[1], VAO[1], 1);  // Square
 
-	bool drawTriangle = true;
-	float scale = 1.0f;
-	float color[4] = { 0.2f, 0.2f, 0.8f, 1.0f };
+    while (!glfwWindowShouldClose(window)) {
+        glClear(GL_COLOR_BUFFER_BIT);
 
-	glfwSetKeyCallback(window, KbdCallback); //set keyboard callback to quit
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
-	// Main while loop
-	while (!glfwWindowShouldClose(window))
-	{
-		//Clean the window
-		glClear(GL_COLOR_BUFFER_BIT);
+        glUseProgram(shaderProg);
 
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+        if (showBoth) {
+            glBindVertexArray(VAO[0]);
+            glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorTriangle);
+            glDrawArrays(GL_LINE_LOOP, 0, 3);
 
-		//Draw the scene
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
+            glBindVertexArray(VAO[1]);
+            glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorSquare);
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+        }
+        else {
+            if (drawTriangle) {
+                glBindVertexArray(VAO[0]);
+                glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorTriangle);
+                glDrawArrays(GL_LINE_LOOP, 0, 3);
+            }
+            else if (drawSquare) {
+                glBindVertexArray(VAO[1]);
+                glUniform4fv(glGetUniformLocation(shaderProg, "color"), 1, colorSquare);
+                glDrawArrays(GL_LINE_LOOP, 0, 4);
+            }
+        }
 
-		if (drawTriangle) {
-			glDrawArrays(GL_POINTS, 0, 3);
-			glDrawArrays(GL_LINE_LOOP, 0, 3);
-		}
+        ImGui::Begin("CS 535");
+        ImGui::Text("Let there be OpenGL!");
+        ImGui::Checkbox("Draw Triangle", &drawTriangle);
+        ImGui::Checkbox("Draw Square", &drawSquare);
+        ImGui::Checkbox("Show Both", &showBoth);
+        ImGui::SliderFloat("Scale", &scale, -3.0f, 3.0f);
+        ImGui::ColorEdit4("Triangle Color", colorTriangle);
+        ImGui::ColorEdit4("Square Color", colorSquare);
+        ImGui::End();
 
-		// ImGUI window creation
-		ImGui::Begin("CS 535");
-		// Text that appears in the window
-		ImGui::Text("Let there be OpenGL!");
-		// Checkbox that appears in the window
-		ImGui::Checkbox("Draw Triangle", &drawTriangle);
-		// Slider that appears in the window
-		ImGui::SliderFloat("Scale", &scale, 0.5f, 2.0f);
-		// Fancy color editor that appears in the window
-		ImGui::ColorEdit4("Color", color);
-		// Ends the window
-		ImGui::End();
+        glUniform1f(glGetUniformLocation(shaderProg, "scale"), scale);
 
-		// Export variables to shader
-		glUseProgram(shaderProg);
-		glUniform1f(glGetUniformLocation(shaderProg, "scale"), scale);
-		glUniform4f(glGetUniformLocation(shaderProg, "color"), color[0], color[1], color[2], color[3]);
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		// Renders the ImGUI elements
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		//Swap the back buffer with the front buffer
-		glfwSwapBuffers(window);
-		//make sure events are served
-		glfwPollEvents();
-	}
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
 
-	//Cleanup
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
-	glDeleteProgram(shaderProg);
-	glfwDestroyWindow(window);
-	glfwTerminate();
-	return 0;
+    glDeleteVertexArrays(2, VAO);
+    glDeleteBuffers(2, VBO);
+    glDeleteProgram(shaderProg);
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    return 0;
 }
