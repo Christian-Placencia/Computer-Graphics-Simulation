@@ -195,6 +195,8 @@ int main() {
         ImGui::End();
 
         glUniform1f(glGetUniformLocation(shaderProg, "scale"), scale);
+        glUniform1f(glGetUniformLocation(shaderProg, "translation_x"), translation_x);
+        glUniform1f(glGetUniformLocation(shaderProg, "translation_y"), translation_y);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
