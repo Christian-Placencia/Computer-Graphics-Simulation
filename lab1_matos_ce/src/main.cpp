@@ -26,6 +26,7 @@ int CompileShaders() {
         "uniform float scale;\n"
 		"uniform float translation_x;\n"
 		"uniform float translation_y;\n"
+		"uniform float rotation;\n"
         "void main()\n"
         "{\n"
         "   gl_Position = vec4(scale * (aPos.x + translation_x), scale * (aPos.y + translation_y), scale * aPos.z, 1.0);\n"
@@ -197,6 +198,7 @@ int main() {
         glUniform1f(glGetUniformLocation(shaderProg, "scale"), scale);
         glUniform1f(glGetUniformLocation(shaderProg, "translation_x"), translation_x);
         glUniform1f(glGetUniformLocation(shaderProg, "translation_y"), translation_y);
+        glUniform1f(glGetUniformLocation(shaderProg, "rotation"), rotation);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
