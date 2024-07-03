@@ -414,6 +414,7 @@ int main() {
 	ImGui_ImplOpenGL3_Init("#version 330");
 
 	bool drawScene = true;
+	bool fillShape = false;
 	float color[4] = { 0.8f, 0.8f, 0.2f, 1.0f };
 	glUniform4f(glGetUniformLocation(shaderProg, "color"), color[0], color[1], color[2], color[3]);
 
@@ -436,6 +437,8 @@ int main() {
 		if (ImGui::Button("Save OBJ")) {
 			SaveOBJ(&tri, filename);
 		}
+
+		ImGui::Checkbox("Fill Shape", &fillShape);
 
 		if (ImGui::SliderInt("Mesh Subdivision", &steps, 1, 100, "%d", 0)) {
 			switch (objectType) {
@@ -481,6 +484,8 @@ int main() {
 		if (drawScene) {
 			glDrawArrays(GL_POINTS, 0, points / 3);
 			glDrawArrays(GL_TRIANGLES, 0, points / 3);
+
+			glPolygonMode(GL_FRONT_AND_BACK, fillShape ? GL_FILL : GL_LINE);
 		}
 
 		ImGui::Render();
