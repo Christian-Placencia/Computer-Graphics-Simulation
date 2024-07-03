@@ -1,29 +1,49 @@
 ﻿  main.cpp
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\include\trackball.h(78,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\include\trackball.h(79,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\include\trackball.h(80,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(170,17): warning C4267: '=': conversion from 'size_t' to 'GLuint', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(194,25): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(194,22): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(200,43): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(200,35): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(201,46): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(201,38): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(202,41): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(202,33): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(217,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(217,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(222,40): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(222,32): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(227,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(227,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(232,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(232,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(237,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(237,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(242,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(242,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(284,14): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(328,16): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(331,16): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-  RuledSurface-glm-imGui.vcxproj -> C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\x64\Debug\RuledSurface.exe
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\include\trackball.h(78,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\include\trackball.h(79,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\include\trackball.h(80,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(54,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(78,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(79,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(238,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(239,19): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(322,17): warning C4267: '=': conversion from 'size_t' to 'GLuint', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(339,25): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(339,22): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(343,43): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(343,35): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(344,46): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(344,38): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(345,41): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(345,33): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(354,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(354,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(359,40): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(359,32): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(364,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(364,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(369,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(369,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(374,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(374,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(379,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(379,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(407,14): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(452,16): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\src\main.cpp(455,16): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+glfw3.lib(init.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(init.obj)' or at ''; linking object as if no debug info
+glfw3.lib(monitor.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(monitor.obj)' or at ''; linking object as if no debug info
+glfw3.lib(window.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(window.obj)' or at ''; linking object as if no debug info
+glfw3.lib(input.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(input.obj)' or at ''; linking object as if no debug info
+glfw3.lib(win32_window.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(win32_window.obj)' or at ''; linking object as if no debug info
+glfw3.lib(context.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(context.obj)' or at ''; linking object as if no debug info
+glfw3.lib(win32_init.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(win32_init.obj)' or at ''; linking object as if no debug info
+glfw3.lib(win32_monitor.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(win32_monitor.obj)' or at ''; linking object as if no debug info
+glfw3.lib(win32_time.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(win32_time.obj)' or at ''; linking object as if no debug info
+glfw3.lib(win32_thread.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(win32_thread.obj)' or at ''; linking object as if no debug info
+glfw3.lib(vulkan.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(vulkan.obj)' or at ''; linking object as if no debug info
+glfw3.lib(win32_joystick.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(win32_joystick.obj)' or at ''; linking object as if no debug info
+glfw3.lib(wgl_context.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(wgl_context.obj)' or at ''; linking object as if no debug info
+glfw3.lib(egl_context.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(egl_context.obj)' or at ''; linking object as if no debug info
+glfw3.lib(osmesa_context.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(osmesa_context.obj)' or at ''; linking object as if no debug info
+  RuledSurface-glm-imGui.vcxproj -> C:\Users\anave\OneDrive\Escritorio\UP\Verano2024\Interfaces\lab2_vega_at\x64\Debug\RuledSurface.exe

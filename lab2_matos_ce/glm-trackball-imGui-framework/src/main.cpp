@@ -1,14 +1,6 @@
-/*
- Ruled surface                
-(C) Bedrich Benes 2022
-Purdue University
-bbenes@purdue.edu
-*/
-
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-
 
 #include <iostream>
 #include "glad/glad.h"
@@ -36,7 +28,6 @@ bbenes@purdue.edu
 #pragma warning(disable : 4996)
 #pragma comment(lib, "glfw3.lib")
 
-
 using namespace std;
 
 TrackBallC trackball;
@@ -54,51 +45,212 @@ GLdouble mouseX, mouseY;
 //Vertex array object and vertex buffer object indices 
 GLuint VAO, VBO;
 
-
-inline void AddVertex(vector <GLfloat>* a, glm::vec3 A) //check this!
-{
+inline void AddVertex(vector <GLfloat>* a, glm::vec3 A) {
 	a->push_back(A[0]); a->push_back(A[1]); a->push_back(A[2]);
 }
 
-
-glm::vec3 P(GLfloat t)
-{
-	return glm::vec3(0.3 * cos(2 * M_PI * t + M_PI / 2), 0, 0.6 * sin(2 * M_PI * t + M_PI / 2));
+// Superficie de revolución 1 (Cono sin base)
+glm::vec3 Cone(float u, float v) {
+	float theta = 2 * M_PI * u;
+	float x = (1 - v) * cos(theta);
+	float y = v;
+	float z = (1 - v) * sin(theta);
+	return glm::vec3(x, y, z);
 }
 
-inline glm::vec3 Q(GLfloat t)
-{
-	return glm::vec3(0.6 * cos(2 * M_PI * t), 1, 0.6 * sin(2 * M_PI * t));
-}
+void CreateCone(vector<GLfloat>& vv, int n) {
+	float step = 1.f / n;
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			AddVertex(&vv, Cone(i * step, j * step));
+			AddVertex(&vv, Cone((i + 1) * step, j * step));
+			AddVertex(&vv, Cone((i + 1) * step, (j + 1) * step));
 
-inline glm::vec3 S(GLfloat u, GLfloat t)
-{
-	return glm::vec3(u * P(t) + (1 - u) * Q(t));
-}
-
-void CreateRuled(vector <GLfloat>* vv, int n)
-{
-	GLfloat step = 1.f / n;
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n; j++)
-		{
-			//lower triangle
-			AddVertex(vv, S(i * step, j * step));
-			AddVertex(vv, S((i + 1) * step, j * step));
-			AddVertex(vv, S((i + 1) * step, (j + 1) * step));
-			//upper triangle
-			AddVertex(vv, S(i * step, j * step));
-			AddVertex(vv, S((i + 1) * step, (j + 1) * step));
-			AddVertex(vv, S(i * step, (j + 1) * step));
+			AddVertex(&vv, Cone(i * step, j * step));
+			AddVertex(&vv, Cone((i + 1) * step, (j + 1) * step));
+			AddVertex(&vv, Cone(i * step, (j + 1) * step));
 		}
 	}
 }
 
+// Superficie de revolución 2 (Antena de TV)
+glm::vec3 SandClock(float u, float v) {
+	float theta = 2 * M_PI * u;
+	float r = 0.5 + 0.5 * cos(2 * M_PI * v);
+	float x = r * cos(theta);
+	float y = 2 * v - 1;  // Adjusted height
+	float z = r * sin(theta);
+	return glm::vec3(x, y, z);
+}
+
+void CreateSandClock(vector<GLfloat>& vv, int n) {
+	float step = 1.f / n;
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			AddVertex(&vv, SandClock(i * step, j * step));
+			AddVertex(&vv, SandClock((i + 1) * step, j * step));
+			AddVertex(&vv, SandClock((i + 1) * step, (j + 1) * step));
+
+			AddVertex(&vv, SandClock(i * step, j * step));
+			AddVertex(&vv, SandClock((i + 1) * step, (j + 1) * step));
+			AddVertex(&vv, SandClock(i * step, (j + 1) * step));
+		}
+	}
+}
+
+void CreateCube(vector<GLfloat>& vv, int n) {
+	glm::vec3 vertices[8] = {
+		glm::vec3(-1.0f, -1.0f, -1.0f),
+		glm::vec3(1.0f, -1.0f, -1.0f),
+		glm::vec3(1.0f,  1.0f, -1.0f),
+		glm::vec3(-1.0f,  1.0f, -1.0f),
+		glm::vec3(-1.0f, -1.0f,  1.0f),
+		glm::vec3(1.0f, -1.0f,  1.0f),
+		glm::vec3(1.0f,  1.0f,  1.0f),
+		glm::vec3(-1.0f,  1.0f,  1.0f)
+	};
+
+	unsigned int faces[6][4] = {
+		{0, 1, 2, 3},
+		{4, 5, 6, 7},
+		{0, 1, 5, 4},
+		{2, 3, 7, 6},
+		{0, 3, 7, 4},
+		{1, 2, 6, 5}
+	};
+
+	for (int f = 0; f < 6; ++f) {
+		for (int i = 0; i < n; ++i) {
+			for (int j = 0; j < n; ++j) {
+				float u0 = (float)i / n;
+				float v0 = (float)j / n;
+				float u1 = (float)(i + 1) / n;
+				float v1 = (float)(j + 1) / n;
+
+				glm::vec3 p0 = (1 - u0) * (1 - v0) * vertices[faces[f][0]] +
+					u0 * (1 - v0) * vertices[faces[f][1]] +
+					u0 * v0 * vertices[faces[f][2]] +
+					(1 - u0) * v0 * vertices[faces[f][3]];
+
+				glm::vec3 p1 = (1 - u1) * (1 - v0) * vertices[faces[f][0]] +
+					u1 * (1 - v0) * vertices[faces[f][1]] +
+					u1 * v0 * vertices[faces[f][2]] +
+					(1 - u1) * v0 * vertices[faces[f][3]];
+
+				glm::vec3 p2 = (1 - u1) * (1 - v1) * vertices[faces[f][0]] +
+					u1 * (1 - v1) * vertices[faces[f][1]] +
+					u1 * v1 * vertices[faces[f][2]] +
+					(1 - u1) * v1 * vertices[faces[f][3]];
+
+				glm::vec3 p3 = (1 - u0) * (1 - v1) * vertices[faces[f][0]] +
+					u0 * (1 - v1) * vertices[faces[f][1]] +
+					u0 * v1 * vertices[faces[f][2]] +
+					(1 - u0) * v1 * vertices[faces[f][3]];
+
+				AddVertex(&vv, p0);
+				AddVertex(&vv, p1);
+				AddVertex(&vv, p2);
+
+				AddVertex(&vv, p0);
+				AddVertex(&vv, p2);
+				AddVertex(&vv, p3);
+			}
+		}
+	}
+}
+
+void CreateDiamond(vector<GLfloat>& vv, int n) {
+	glm::vec3 vertices[6] = {
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(0.0f, -1.0f, 0.0f),
+		glm::vec3(1.0f, 0.0f, 0.0f),
+		glm::vec3(-1.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f),
+		glm::vec3(0.0f, 0.0f, -1.0f)
+	};
+
+	unsigned int indices[24] = {
+		0, 2, 4,
+		0, 4, 3,
+		0, 3, 5,
+		0, 5, 2,
+		1, 2, 4,
+		1, 4, 3,
+		1, 3, 5,
+		1, 5, 2
+	};
+
+	for (unsigned int i = 0; i < 24; i++) {
+		AddVertex(&vv, vertices[indices[i]]);
+	}
+}
+
+
+inline glm::vec3 Sphere(GLfloat u, GLfloat v) {
+	return glm::vec3(cos(2 * M_PI * u) * sin(M_PI * v),
+		sin(2 * M_PI * u) * sin(M_PI * v),
+		cos(M_PI * v));
+}
+
+void CreateSphere(vector<GLfloat>& vertices, int n) {
+	GLfloat step = 1.f / n;
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			AddVertex(&vertices, Sphere(i * step, j * step));
+			AddVertex(&vertices, Sphere((i + 1) * step, j * step));
+			AddVertex(&vertices, Sphere(i * step, (j + 1) * step));
+
+			AddVertex(&vertices, Sphere((i + 1) * step, j * step));
+			AddVertex(&vertices, Sphere((i + 1) * step, (j + 1) * step));
+			AddVertex(&vertices, Sphere(i * step, (j + 1) * step));
+		}
+	}
+}
+
+// Pirámide
+void CreatePyramid(vector<GLfloat>& vv, int n) {
+	glm::vec3 vertices[5] = {
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(-1.0f, -1.0f, -1.0f),
+		glm::vec3(1.0f, -1.0f, -1.0f),
+		glm::vec3(1.0f, -1.0f, 1.0f),
+		glm::vec3(-1.0f, -1.0f, 1.0f)
+	};
+
+	unsigned int indices[18] = {
+		0, 1, 2,
+		0, 2, 3,
+		0, 3, 4,
+		0, 4, 1,
+		1, 2, 3,
+		1, 3, 4
+	};
+
+	for (unsigned int i = 0; i < 18; i++) {
+		AddVertex(&vv, vertices[indices[i]]);
+	}
+}
+
+
+
+void CreateCylinder(vector<GLfloat>& vv, int n) {
+	for (int i = 0; i < n; ++i) {
+		float theta = 2.0f * M_PI * float(i) / float(n);
+		float nextTheta = 2.0f * M_PI * float(i + 1) / float(n);
+
+		AddVertex(&vv, glm::vec3(cos(theta), 1.0f, sin(theta)));
+		AddVertex(&vv, glm::vec3(cos(nextTheta), 1.0f, sin(nextTheta)));
+		AddVertex(&vv, glm::vec3(cos(nextTheta), 0.0f, sin(nextTheta)));
+
+		AddVertex(&vv, glm::vec3(cos(theta), 1.0f, sin(theta)));
+		AddVertex(&vv, glm::vec3(cos(nextTheta), 0.0f, sin(nextTheta)));
+		AddVertex(&vv, glm::vec3(cos(theta), 0.0f, sin(theta)));
+	}
+}
 
 int CompileShaders() {
 	//Vertex Shader
-	const char* vsSrc= "#version 330 core\n"
+	const char* vsSrc = "#version 330 core\n"
 		"layout (location = 0) in vec4 iPos;\n"
 		"uniform mat4 modelview;\n"
 		"void main()\n"
@@ -142,82 +294,67 @@ int CompileShaders() {
 	return shaderProg;
 }
 
-void BuildScene(GLuint& VBO, GLuint& VAO, int n) { //return VBO and VAO values n is the subdivision
+void BuildScene(GLuint& VBO, GLuint& VAO, int n, void(*CreateObjectFunc)(vector<GLfloat>&, int)) {
 	vector<GLfloat> v;
-	CreateRuled(&v, n);
-	//now get it ready for saving as OBJ
+	CreateObjectFunc(v, n);
+	// now get it ready for saving as OBJ
 	tri.clear();
 	for (unsigned int i = 0; i < v.size(); i += 9) { //stride 3 - 3 vertices per triangle
 		TriangleC tmp;
 		glm::vec3 a, b, c;
-		a=glm::vec3(v[i], v[i + 1], v[i + 2]);
-		b=glm::vec3(v[i + 3], v[i + 4], v[i + 5]);
+		a = glm::vec3(v[i], v[i + 1], v[i + 2]);
+		b = glm::vec3(v[i + 3], v[i + 4], v[i + 5]);
 		c = glm::vec3(v[i + 6], v[i + 7], v[i + 8]);
 		tmp.Set(a, b, c); //store them for 3D export
 		tri.push_back(tmp);
 	}
 
-	//make VAO
+	// make VAO
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 
-	//bind it
+	// bind it
 	glBindVertexArray(VAO);
 
-	//bind the VBO
+	// bind the VBO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	//send the data to the GPU
+	// send the data to the GPU
 	points = v.size();
 	glBufferData(GL_ARRAY_BUFFER, points * sizeof(GLfloat), &v[0], GL_STATIC_DRAW);
 
-	//Configure the attributes
-//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	// Configure the attributes
 	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//Make it valid
+	// Make it valid
 	glEnableVertexAttribArray(0);
 
-	v.clear(); //no need for the data, it is on the GPU now
-
+	v.clear(); // no need for the data, it is on the GPU now
 }
 
-//Quit when ESC is released
-static void KbdCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
+static void KbdCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-//set the callbacks for the virtual trackball
-//this is executed when the mouse is moving
 void MouseCallback(GLFWwindow* window, double x, double y) {
-	//do not forget to pass the events to ImGUI!
 	ImGuiIO& io = ImGui::GetIO();
 	io.AddMousePosEvent(x, y);
 	if (io.WantCaptureMouse) return; //make sure you do not call this callback when over a menu
-//now process them
 	mouseX = x;
 	mouseY = y;
-	//we need to perform an action only if a button is pressed
-	if (mouseLeft)  trackball.Rotate(mouseX, mouseY); 
+	if (mouseLeft)  trackball.Rotate(mouseX, mouseY);
 	if (mouseMid)   trackball.Translate(mouseX, mouseY);
 	if (mouseRight) trackball.Zoom(mouseX, mouseY);
 }
 
-
-//set the variables when the button is pressed or released
 void MouseButtonCallback(GLFWwindow* window, int button, int state, int mods) {
-//do not forget to pass the events to ImGUI!
-	
 	ImGuiIO& io = ImGui::GetIO();
 	io.AddMouseButtonEvent(button, state);
 	if (io.WantCaptureMouse) return; //make sure you do not call this callback when over a menu
-
-//process them
 	if (button == GLFW_MOUSE_BUTTON_LEFT && state == GLFW_PRESS)
 	{
 		trackball.Set(window, true, mouseX, mouseY);
 		mouseLeft = true;
 	}
-	if (button == GLFW_MOUSE_BUTTON_LEFT  && state == GLFW_RELEASE)
+	if (button == GLFW_MOUSE_BUTTON_LEFT && state == GLFW_RELEASE)
 	{
 		trackball.Set(window, false, mouseX, mouseY);
 		mouseLeft = false;
@@ -244,46 +381,31 @@ void MouseButtonCallback(GLFWwindow* window, int button, int state, int mods) {
 	}
 }
 
-
-int main()
-{
+int main() {
 	glfwInit();
-
-	//negotiate with the OpenGL
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	//make OpenGL window
 	GLFWwindow* window = glfwCreateWindow(800, 800, "Simple", NULL, NULL);
-	//is all OK?
-	if (window == NULL)
-	{
+	if (window == NULL) {
 		std::cout << "Cannot open GLFW window" << std::endl;
 		glfwTerminate();
 		return -1;
 	}
-	//Paste the window to the current context
 	glfwMakeContextCurrent(window);
-
-	//Load GLAD to configure OpenGL
 	gladLoadGL();
-	//Set the viewport
 	glViewport(0, 0, 800, 800);
 
-	//once the OpenGL context is done, build the scene and compile shaders
-	BuildScene(VBO, VAO, steps);
+	BuildScene(VBO, VAO, steps, CreateCone);
 	int shaderProg = CompileShaders();
 	GLint modelviewParameter = glGetUniformLocation(shaderProg, "modelview");
 
-	//Background color
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	//Use shader
 	glUseProgram(shaderProg);
 	glPointSize(pointSize);
 
-	// Initialize ImGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -293,75 +415,80 @@ int main()
 
 	bool drawScene = true;
 	float color[4] = { 0.8f, 0.8f, 0.2f, 1.0f };
-	//send the color to the fragment shader
 	glUniform4f(glGetUniformLocation(shaderProg, "color"), color[0], color[1], color[2], color[3]);
 
-
-	glfwSetKeyCallback(window, KbdCallback); //set keyboard callback to quit
+	glfwSetKeyCallback(window, KbdCallback);
 	glfwSetCursorPosCallback(window, MouseCallback);
-	glfwSetMouseButtonCallback(window, MouseButtonCallback);;
+	glfwSetMouseButtonCallback(window, MouseButtonCallback);
 
-	// Main while loop
-	while (!glfwWindowShouldClose(window))
-	{
-		//Clean the window
+	int objectType = 0; // 0: Cone, 1: SandClock, 2: Cube, 3: Diamond, 4: Sphere , 5: Cylinder, 6: Pyramid
+
+	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		// ImGUI window creation
-		ImGui::Begin("Ruled Surface");
-		//checkbox to render or not the scene
+		ImGui::Begin("Object Selector");
 		ImGui::Checkbox("Draw Scene", &drawScene);
-		//checkbox to render or not the scene
+
 		if (ImGui::Button("Save OBJ")) {
 			SaveOBJ(&tri, filename);
-			//ImGui::OpenPopup("Saved");
 		}
-		//color picker
+
 		if (ImGui::SliderInt("Mesh Subdivision", &steps, 1, 100, "%d", 0)) {
-			BuildScene(VBO, VAO, steps); //rebuild scene if the subdivision has changed
+			switch (objectType) {
+			case 0: BuildScene(VBO, VAO, steps, CreateCone); break;
+			case 1: BuildScene(VBO, VAO, steps, CreateSandClock); break;
+			case 2: BuildScene(VBO, VAO, steps, CreateCube); break;
+			case 3: BuildScene(VBO, VAO, steps, CreateDiamond); break;
+			case 4: BuildScene(VBO, VAO, steps, CreateSphere); break;
+			case 5: BuildScene(VBO, VAO, steps, CreateCylinder); break;
+			case 6: BuildScene(VBO, VAO, steps, CreatePyramid); break;
+			}
 		}
 		if (ImGui::SliderInt("point Size", &pointSize, 1, 10, "%d", 0)) {
-			glPointSize(pointSize); //set the new point size if it has been changed			
+			glPointSize(pointSize);
 		}
 		if (ImGui::SliderInt("line width", &lineWidth, 1, 10, "%d", 0)) {
-			glLineWidth(lineWidth); //set the new point size if it has been changed			
+			glLineWidth(lineWidth);
 		}
-		if (ImGui::ColorEdit4("Color", color)) { //set the new color only if it has changed
+		if (ImGui::ColorEdit4("Color", color)) {
 			glUniform4f(glGetUniformLocation(shaderProg, "color"), color[0], color[1], color[2], color[3]);
 		}
+		const char* items[] = { "Cone", "Sand Clock", "Cube", "Diamond", "Sphere", "Cylinder", "Pyramid" };
+		if (ImGui::Combo("Object Type", &objectType, items, IM_ARRAYSIZE(items))) {
+			switch (objectType) {
+			case 0: BuildScene(VBO, VAO, steps, CreateCone); break;
+			case 1: BuildScene(VBO, VAO, steps, CreateSandClock); break;
+			case 2: BuildScene(VBO, VAO, steps, CreateCube); break;
+			case 3: BuildScene(VBO, VAO, steps, CreateDiamond); break;
+			case 4: BuildScene(VBO, VAO, steps, CreateSphere); break;
+			case 5: BuildScene(VBO, VAO, steps, CreateCylinder); break;
+			case 6: BuildScene(VBO, VAO, steps, CreatePyramid); break;
+			}
+		}
 
-		// Ends the window
 		ImGui::End();
 
-		//set the projection matrix
 		glm::mat4 proj = glm::perspective(65.f, 1.f, 0.01f, 1000.f);
-		//set the viewing matrix (looking from [0,0,5] to [0,0,0])
-		glm::mat4 view = glm::lookAt(glm::vec3(0,0,5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-		//get the modeling matrix from the trackball
+		glm::mat4 view = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 		glm::mat4 model = trackball.Set3DViewCameraMatrix();
-		//premultiply the modelViewProjection matrix
 		glm::mat4 modelView = proj * view * model;
-		//and send it to the vertex shader
 		glUniformMatrix4fv(modelviewParameter, 1, GL_FALSE, glm::value_ptr(modelView));
-		
+
 		if (drawScene) {
 			glDrawArrays(GL_POINTS, 0, points / 3);
 			glDrawArrays(GL_TRIANGLES, 0, points / 3);
 		}
 
-		// Renders the ImGUI elements
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		//Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
-		//make sure events are served
 		glfwPollEvents();
 	}
-	//Cleanup
+
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 	glDeleteProgram(shaderProg);
