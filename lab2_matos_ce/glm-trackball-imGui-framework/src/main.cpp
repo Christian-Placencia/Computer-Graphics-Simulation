@@ -248,6 +248,36 @@ void CreateCylinder(vector<GLfloat>& vv, int n) {
 	}
 }
 
+glm::vec3 Torus(float phi, float theta, float R, float r) {
+	float x = (R + r * cos(theta)) * cos(phi);
+	float y = (R + r * cos(theta)) * sin(phi);
+	float z = r * sin(theta);
+	return glm::vec3(x, y, z);
+}
+
+void CreateTorus(vector<GLfloat>& vv, int n) {
+	float R = 1.0f;
+	float r = 0.5f;
+
+	for (int i = 0; i < n; ++i) {
+		float phi = 2.0f * M_PI * float(i) / float(n);
+		float nextPhi = 2.0f * M_PI * float(i + 1) / float(n);
+
+		for (int j = 0; j < n; ++j) {
+			float theta = 2.0f * M_PI * float(j) / float(n);
+			float nextTheta = 2.0f * M_PI * float(j + 1) / float(n);
+
+			AddVertex(&vv, Torus(phi, theta, R, r));
+			AddVertex(&vv, Torus(nextPhi, theta, R, r));
+			AddVertex(&vv, Torus(nextPhi, nextTheta, R, r));
+
+			AddVertex(&vv, Torus(phi, theta, R, r));
+			AddVertex(&vv, Torus(nextPhi, nextTheta, R, r));
+			AddVertex(&vv, Torus(phi, nextTheta, R, r));
+		}
+	}
+}
+
 int CompileShaders() {
 	//Vertex Shader
 	const char* vsSrc = "#version 330 core\n"
@@ -449,6 +479,7 @@ int main() {
 			case 4: BuildScene(VBO, VAO, steps, CreateSphere); break;
 			case 5: BuildScene(VBO, VAO, steps, CreateCylinder); break;
 			case 6: BuildScene(VBO, VAO, steps, CreatePyramid); break;
+			case 7: BuildScene(VBO, VAO, steps, CreateTorus); break;
 			}
 		}
 		if (ImGui::SliderInt("point Size", &pointSize, 1, 10, "%d", 0)) {
@@ -460,7 +491,7 @@ int main() {
 		if (ImGui::ColorEdit4("Color", color)) {
 			glUniform4f(glGetUniformLocation(shaderProg, "color"), color[0], color[1], color[2], color[3]);
 		}
-		const char* items[] = { "Cone", "Sand Clock", "Cube", "Diamond", "Sphere", "Cylinder", "Pyramid" };
+		const char* items[] = { "Cone", "Sand Clock", "Cube", "Diamond", "Sphere", "Cylinder", "Pyramid", "Torus"};
 		if (ImGui::Combo("Object Type", &objectType, items, IM_ARRAYSIZE(items))) {
 			switch (objectType) {
 			case 0: BuildScene(VBO, VAO, steps, CreateCone); break;
@@ -470,6 +501,7 @@ int main() {
 			case 4: BuildScene(VBO, VAO, steps, CreateSphere); break;
 			case 5: BuildScene(VBO, VAO, steps, CreateCylinder); break;
 			case 6: BuildScene(VBO, VAO, steps, CreatePyramid); break;
+			case 7: BuildScene(VBO, VAO, steps, CreateTorus); break;
 			}
 		}
 
