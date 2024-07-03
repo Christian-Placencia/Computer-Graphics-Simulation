@@ -1,0 +1,29 @@
+﻿  main.cpp
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\include\trackball.h(78,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\include\trackball.h(79,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\include\trackball.h(80,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(170,17): warning C4267: '=': conversion from 'size_t' to 'GLuint', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(194,25): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(194,22): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(200,43): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(200,35): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(201,46): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(201,38): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(202,41): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(202,33): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(217,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(217,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(222,40): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(222,32): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(227,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(227,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(232,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(232,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(237,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(237,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(242,39): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(242,31): warning C4244: 'argument': conversion from 'GLdouble' to 'int', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(284,14): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(328,16): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\src\main.cpp(331,16): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+  RuledSurface-glm-imGui.vcxproj -> C:\Users\anave\Documents\GitHub\Computer-Graphics-Simulation\lab2_matos_ce\glm-trackball-imGui-framework\x64\Debug\RuledSurface.exe
