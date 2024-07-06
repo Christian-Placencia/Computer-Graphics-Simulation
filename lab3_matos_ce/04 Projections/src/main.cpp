@@ -93,12 +93,15 @@ void DrawPlanetAndMoons(glm::mat4 m, int numMoons, glm::vec3 planetPosition, glm
     // Draw moons
     for (int i = 0; i < numMoons; i++) {
         glm::mat4 moon_m = m; // Create a copy of the planet's matrix
-        moon_m = glm::rotate(moon_m, glm::radians(ftime * moonRotationSpeeds[i] * moonDirections[i]), glm::vec3(0.0f, 1.0f, 0.5f));
+        moon_m = glm::rotate(moon_m, glm::radians(ftime * moonRotationSpeeds[i] * moonDirections[i]), glm::vec3(0.0f, 1.0f, 0.0f));
         moon_m = glm::translate(moon_m, glm::vec3(moonOrbitRadii[i], 0.0f, 0.0f));
         DrawObject(moon_m, sphere, moonScales[i], glm::vec3(0.0f, 1.0f, 0.0f), ftime * moonRotationSpeeds[i] * moonDirections[i]);
     }
 }
 
+//Define the places for the camera
+enum CameraMode { SUN, PLANET1, PLANET2, PLANET3, MOON1, MOON2, MOON3 };
+CameraMode currentCameraMode = SUN;
 
 //the main rendering function
 void RenderObjects()
@@ -109,10 +112,42 @@ void RenderObjects()
     glLineWidth(2);
     //set the projection and view once for the scene
     glUniformMatrix4fv(projParameter, 1, GL_FALSE, glm::value_ptr(proj));
-    view = glm::lookAt(glm::vec3(125 * sin(ftime / 40.f), 3.f + 3 * sin(ftime / 80.f), 25 * cos(ftime / 40.f)), //eye
-        glm::vec3(0, 0, 0),  //destination
-        glm::vec3(0, 1, 0)); //up
+    glm::vec3 eye;
+    glm::vec3 target;
 
+    switch (currentCameraMode)
+    {
+    case SUN:
+        eye = glm::vec3(0.0f,0.0f,0.0f);
+        target = glm::vec3(20.0f, 0.0f, 0.0f);
+        break;
+    case PLANET1:
+        eye = glm::vec3(10.0f, 2.0f, 10.0f);
+        target = glm::vec3(0.0f, 0.0f, 0.0f);
+        break;
+    case PLANET2:
+        eye = glm::vec3(20.0f, 2.0f, 20.0f);
+        target = glm::vec3(0.0f, 0.0f, 0.0f);
+        break;
+    case PLANET3:
+        eye = glm::vec3(30.0f, 2.0f, 30.0f);
+        target = glm::vec3(0.0f, 0.0f, 0.0f);
+        break;
+    case MOON1:
+        eye = glm::vec3(12.0f, 2.0f, 12.0f);
+        target = glm::vec3(10.0f, 0.0f, 0.0f);
+        break;
+    case MOON2:
+        eye = glm::vec3(14.0f, 2.0f, 14.0f);
+        target = glm::vec3(10.0f, 0.0f, 0.0f);
+        break;
+    case MOON3:
+        eye = glm::vec3(16.0f, 2.0f, 16.0f);
+        target = glm::vec3(10.0f, 0.0f, 0.0f);
+        break;
+    }
+
+    view = glm::lookAt(eye, target, glm::vec3(0, 1, 0));
     glUniformMatrix4fv(viewParameter, 1, GL_FALSE, glm::value_ptr(view));
 
     glm::mat4 m = glm::mat4(1.0);
@@ -173,6 +208,13 @@ void Kbd(unsigned char a, int x, int y)
     case 32: { needRedisplay = !needRedisplay; break; }
     case 'S':
     case 's': { sign = -sign; break; }
+    case '1': { currentCameraMode = SUN; break; }
+    case '2': { currentCameraMode = PLANET1; break; }
+    case '3': { currentCameraMode = PLANET2; break; }
+    case '4': { currentCameraMode = PLANET3; break; }
+    case '5': { currentCameraMode = MOON1; break; }
+    case '6': { currentCameraMode = MOON2; break; }
+    case '7': { currentCameraMode = MOON3; break; }
     case 'a': { stacks++; break; }
     case 'A': {
         stacks--;
