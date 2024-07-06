@@ -84,17 +84,15 @@ void DrawObject(glm::mat4 m, ShapesC* object, glm::vec3 scale, glm::vec3 rotatio
 void DrawPlanetAndMoons(glm::mat4 m, int numMoons, glm::vec3 planetPosition, glm::vec3 planetScale, float planetRotationSpeed, float* moonOrbitRadii, glm::vec3* moonScales, float* moonRotationSpeeds, int* moonDirections)
 {
     // Rotate around the sun
-    m = glm::rotate(m, ftime * planetRotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
-    // Translate to planet's orbit distance
-    m = glm::translate(m, planetPosition);
+
     // Draw planet
     DrawObject(m, sphere, planetScale, glm::vec3(0.0f, 1.0f, 0.0f), ftime * 50.0f);
 
     // Draw moons
     for (int i = 0; i < numMoons; i++) {
         glm::mat4 moon_m = m; // Create a copy of the planet's matrix
-        moon_m = glm::rotate(moon_m, glm::radians(ftime * moonRotationSpeeds[i] * moonDirections[i]), glm::vec3(0.0f, 1.0f, 0.0f));
-        moon_m = glm::translate(moon_m, glm::vec3(moonOrbitRadii[i], 0.0f, 0.0f));
+        moon_m = glm::rotate(moon_m, ftime * moonRotationSpeeds[i] * moonDirections[i], glm::vec3(0.0f, 1.0f, 0.0f));
+        
         DrawObject(moon_m, sphere, moonScales[i], glm::vec3(0.0f, 1.0f, 0.0f), ftime * moonRotationSpeeds[i] * moonDirections[i]);
     }
 }
