@@ -3,7 +3,6 @@
 /* (C) Bedrich Benes 2021         */
 /* bbenes@purdue.edu              */
 /**********************************/
-
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -13,6 +12,7 @@
 #include <stdexcept>
 #include <string.h>
 #include <iostream>
+#include <ctime>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <time.h>
@@ -54,6 +54,10 @@ GLint projParameter;
 GLint wWindow = 800;
 GLint hWindow = 800;
 
+int planet1Moons = 3;
+int planet2Moons = 2;
+int planet3Moons = 4;
+
 /*********************************
 Some OpenGL-related functions
 **********************************/
@@ -76,10 +80,10 @@ void DrawObject(glm::mat4 m, ShapesC* object, glm::vec3 scale, glm::vec3 rotatio
     object->Render();
 }
 
-void DrawPlanetAndMoons(glm::mat4 m, float planet_distance, float planet_size, float moon_distance, float moon_size, int num_moons)
+void DrawPlanetAndMoons(glm::mat4 m, float planet_distance, float planet_size, float moon_distance, float moon_size, int num_moons, float rotation_speed, bool clockwise)
 {
     // Rotate around the sun
-    m = glm::rotate(m, ftime * 10.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+    m = glm::rotate(m, ftime * rotation_speed * (clockwise ? 1.0f : -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     // Translate to planet's orbit distance
     m = glm::translate(m, glm::vec3(planet_distance, 0.0f, 0.0f));
     // Draw planet
@@ -88,7 +92,7 @@ void DrawPlanetAndMoons(glm::mat4 m, float planet_distance, float planet_size, f
     // Draw moons
     for (int i = 0; i < num_moons; ++i)
     {
-        glm::mat4 moon_m = glm::rotate(m, ftime * 20.0f + glm::radians(360.0f / num_moons * i), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 moon_m = glm::rotate(m, glm::radians(360.0f / num_moons * i), glm::vec3(0.0f, 1.0f, 0.0f));
         moon_m = glm::translate(moon_m, glm::vec3(moon_distance, 0.0f, 0.0f));
         DrawObject(moon_m, sphere, glm::vec3(moon_size), glm::vec3(0.0f, 1.0f, 0.0f), ftime * 100.0f);
     }
@@ -115,9 +119,9 @@ void RenderObjects()
     DrawObject(m, sphere, glm::vec3(2.0f), glm::vec3(0.0f, 1.0f, 0.0f), ftime * 10.0f);
 
     // Draw planets and moons
-    DrawPlanetAndMoons(m, 10.0f, 0.5f, 2.0f, 0.1f, 2); // Planet 1 with 2 moons
-    DrawPlanetAndMoons(m, 20.0f, 0.7f, 3.0f, 0.15f, 3); // Planet 2 with 3 moons
-    DrawPlanetAndMoons(m, 30.0f, 0.9f, 4.0f, 0.2f, 4); // Planet 3 with 4 moons
+    DrawPlanetAndMoons(m, 10.0f, 0.5f, 2.0f, 0.1f, planet1Moons, 30.0f, true); // Planet 1 más rápido con 3 lunas
+    DrawPlanetAndMoons(m, 20.0f, 0.7f, 3.0f, 0.15f, planet2Moons, 15.0f, false); // Planet 2 con 2 lunas
+    DrawPlanetAndMoons(m, 30.0f, 0.9f, 4.0f, 0.2f, planet3Moons, 5.0f, true); // Planet 3 más lento con 4 lunas
 }
 
 void Idle(void)
