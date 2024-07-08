@@ -55,6 +55,9 @@ GLint projParameter;
 GLint wWindow = 800;
 GLint hWindow = 800;
 
+//--------------------------------
+
+// ! Discard
 int planet1Moons = 3;
 int planet2Moons = 2;
 int planet3Moons = 4;
@@ -89,6 +92,13 @@ public:
 	}
 };
 
+// Define the planets and moons
+vector<Planet> planets;
+
+// Define the places for the camera
+enum CameraMode { SUN, PLANET1, PLANET2, PLANET3, MOON1_1, MOON1_2, MOON1_3, MOON2_1, MOON2_2, MOON3_1, MOON3_2, MOON3_3, MOON3_4 };
+CameraMode currentCameraMode = SUN;
+
 /*********************************
 Some OpenGL-related functions
 **********************************/
@@ -111,109 +121,75 @@ void DrawObject(glm::mat4 m, ShapesC* object, glm::vec3 scale, glm::vec3 rotatio
     object->Render();
 }
 
-void DrawPlanetAndMoons(glm::mat4 m, int numMoons, glm::vec3 planetPosition, glm::vec3 planetScale, float planetRotationSpeed, float* moonOrbitRadii, glm::vec3* moonScales, float* moonRotationSpeeds, int* moonDirections)
+// Take a planet and its moons and draw them.
+void DrawPlanetAndMoons(glm::mat4 m, Planet& planet)
 {
     // Rotate around the sun
-    m = glm::rotate(m, ftime * planetRotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
-    // Translate to planet's orbit distance
-    m = glm::translate(m, planetPosition);
-    // Draw planet
-    DrawObject(m, sphere, planetScale, glm::vec3(0.0f, 1.0f, 0.0f), ftime * 50.0f);
+	m = glm::rotate(m, ftime * planet.rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    // Draw moons
-    for (int i = 0; i < numMoons; i++) {
-        glm::mat4 moon_m = m; // Create a copy of the planet's matrix
-        moon_m = glm::rotate(moon_m, glm::radians(ftime * moonRotationSpeeds[i] * moonDirections[i]), glm::vec3(0.0f, 1.0f, 0.0f));
-        moon_m = glm::translate(moon_m, glm::vec3(moonOrbitRadii[i], 0.0f, 0.0f));
-        DrawObject(moon_m, sphere, moonScales[i], glm::vec3(0.0f, 1.0f, 0.0f), ftime * moonRotationSpeeds[i] * moonDirections[i]);
-    }
+	// Translate to planet's orbit distance
+	m = glm::translate(m, planet.position);
+
+	// Draw planet
+	DrawObject(m, sphere, planet.scale, glm::vec3(0.0f, 1.0f, 0.0f), ftime * 50.0f);
+
+	// Draw moons
+	for (Moon& moon : planet.moons) {
+		glm::mat4 moon_m = m; // Create a copy of the planet's matrix
+		moon_m = glm::rotate(moon_m, glm::radians(ftime * moon.rotationSpeed * moon.direction), glm::vec3(0.0f, 1.0f, 0.0f));
+		moon_m = glm::translate(moon_m, glm::vec3(moon.orbitRadius, 0.0f, 0.0f));
+		DrawObject(moon_m, sphere, moon.scale, glm::vec3(0.0f, 1.0f, 0.0f), ftime * moon.rotationSpeed * moon.direction);
+	}
 }
 
-//Define the places for the camera
-enum CameraMode { SUN, PLANET1, PLANET2, PLANET3, MOON1_1, MOON1_2, MOON1_3, MOON2_1, MOON2_2, MOON3_1, MOON3_2, MOON3_3, MOON3_4 };
-CameraMode currentCameraMode = SUN;
-
-//the main rendering function
+// The main rendering function
 void RenderObjects()
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glColor3f(0, 0, 0);
     glPointSize(2);
     glLineWidth(2);
-    //set the projection and view once for the scene
-    glUniformMatrix4fv(projParameter, 1, GL_FALSE, glm::value_ptr(proj));
 
+    // Set the projection and view once for the scene
+    glUniformMatrix4fv(projParameter, 1, GL_FALSE, glm::value_ptr(proj));
     glm::vec3 eye;
     glm::vec3 target;
 
+	// Set the camera position based on the current camera mode
+    switch (currentCameraMode)
+    {
+    case SUN:
+        eye = glm::vec3(0.0f, 0.0f, 50.0f);
+        target = glm::vec3(0.0f, 0.0f, 0.0f);
+        break;
+    case PLANET1:
+        eye = planets[0].position + glm::vec3(5.0f, 5.0f, 5.0f);
+        target = planets[0].position;
+        break;
+    case PLANET2:
+        eye = planets[1].position + glm::vec3(5.0f, 5.0f, 5.0f);
+        target = planets[1].position;
+        break;
+    case PLANET3:
+        eye = planets[2].position + glm::vec3(5.0f, 5.0f, 5.0f);
+        target = planets[2].position;
+        break;
+    }
+
+	// Set the view matrix
+    view = glm::lookAt(eye, target, glm::vec3(0, 1, 0));
+    glUniformMatrix4fv(viewParameter, 1, GL_FALSE, glm::value_ptr(view));
+
+    // Set the model matrix to the identity matrix
     glm::mat4 m = glm::mat4(1.0);
 
     // Draw Sun
     DrawObject(m, sphere, glm::vec3(2.0f), glm::vec3(0.0f, 1.0f, 0.0f), ftime * 10.0f);
 
-    // Draw planets and moons
-
-    // Parameters for planet 1
-    float planet1MoonOrbitRadii[3] = { 2.0f, 3.0f, 4.0f };
-    glm::vec3 planet1MoonScales[3] = { glm::vec3(0.1f), glm::vec3(0.15f), glm::vec3(0.2f) };
-    float planet1MoonRotationSpeeds[3] = { 50.0f, 40.0f, 30.0f };
-    int planet1MoonDirections[3] = { 1, -1, 1 };
-
-    // Parameters for planet 2
-    float planet2MoonOrbitRadii[2] = { 3.0f, 4.5f };
-    glm::vec3 planet2MoonScales[2] = { glm::vec3(0.15f), glm::vec3(0.2f) };
-    float planet2MoonRotationSpeeds[2] = { 60.0f, 45.0f };
-    int planet2MoonDirections[2] = { -1, 1 };
-
-    // Parameters for planet 3
-    float planet3MoonOrbitRadii[4] = { 3.5f, 5.0f, 6.5f, 8.0f };
-    glm::vec3 planet3MoonScales[4] = { glm::vec3(0.1f), glm::vec3(0.15f), glm::vec3(0.2f), glm::vec3(0.25f) };
-    float planet3MoonRotationSpeeds[4] = { 40.0f, 35.0f, 30.0f, 25.0f };
-    int planet3MoonDirections[4] = { 1, -1, 1, -1 };
-
-    switch (currentCameraMode)
-    {
-    case SUN:
-        eye = glm::vec3(0.0f,0.0f,0.0f);
-        target = glm::vec3(20.0f, 0.0f, 0.0f);
-        break;
-    case PLANET1:
-        eye = glm::vec3(10.0f, 2.0f, 10.0f);
-        target = glm::vec3(0.0f, 0.0f, 0.0f);
-        break;
-    case PLANET2:
-        eye = glm::vec3(20.0f, 2.0f, 20.0f);
-        target = glm::vec3(0.0f, 0.0f, 0.0f);
-        break;
-    case PLANET3:
-        eye = glm::vec3(30.0f, 2.0f, 30.0f);
-        target = glm::vec3(0.0f, 0.0f, 0.0f);
-        break;
-    case MOON1_1:
-        eye = glm::vec3(12.0f, 2.0f, 12.0f);
-        target = glm::vec3(10.0f, 0.0f, 0.0f);
-        break;
-    case MOON1_2:
-        eye = glm::vec3(14.0f, 2.0f, 14.0f);
-        target = glm::vec3(10.0f, 0.0f, 0.0f);
-        break;
-    case MOON1_3:
-        eye = glm::vec3(16.0f, 2.0f, 16.0f);
-        target = glm::vec3(10.0f, 0.0f, 0.0f);
-        break;
-    }
-
-    view = glm::lookAt(eye, target, glm::vec3(0, 1, 0));
-    glUniformMatrix4fv(viewParameter, 1, GL_FALSE, glm::value_ptr(view));
-
-    
-
-
-
     // Draw planets with moons
-    DrawPlanetAndMoons(m, planet1Moons, glm::vec3(10.0f, 0.0f, 0.0f), glm::vec3(0.5f), 5.0f, planet1MoonOrbitRadii, planet1MoonScales, planet1MoonRotationSpeeds, planet1MoonDirections);
-    DrawPlanetAndMoons(m, planet2Moons, glm::vec3(20.0f, 0.0f, 0.0f), glm::vec3(0.7f), 15.0f, planet2MoonOrbitRadii, planet2MoonScales, planet2MoonRotationSpeeds, planet2MoonDirections);
-    DrawPlanetAndMoons(m, planet3Moons, glm::vec3(30.0f, 0.0f, 0.0f), glm::vec3(0.9f), 2.5f, planet3MoonOrbitRadii, planet3MoonScales, planet3MoonRotationSpeeds, planet3MoonDirections);
+	for (Planet& planet : planets) {
+		DrawPlanetAndMoons(m, planet);
+	}
 }
 
 void Idle(void)
@@ -273,23 +249,10 @@ void SpecKbdPress(int a, int x, int y)
 {
     switch (a)
     {
-    case GLUT_KEY_LEFT:
-    {
-        break;
-    }
-    case GLUT_KEY_RIGHT:
-    {
-        break;
-    }
-    case GLUT_KEY_DOWN:
-    {
-        break;
-    }
-    case GLUT_KEY_UP:
-    {
-        break;
-    }
-
+    case GLUT_KEY_LEFT: { break; }
+    case GLUT_KEY_RIGHT: { break; }
+    case GLUT_KEY_DOWN: { break; }
+    case GLUT_KEY_UP: { break; }
     }
     glutPostRedisplay();
 }
@@ -299,22 +262,10 @@ void SpecKbdRelease(int a, int x, int y)
 {
     switch (a)
     {
-    case GLUT_KEY_LEFT:
-    {
-        break;
-    }
-    case GLUT_KEY_RIGHT:
-    {
-        break;
-    }
-    case GLUT_KEY_DOWN:
-    {
-        break;
-    }
-    case GLUT_KEY_UP:
-    {
-        break;
-    }
+    case GLUT_KEY_LEFT: { break; }
+    case GLUT_KEY_RIGHT: { break; }
+    case GLUT_KEY_DOWN: { break; }
+    case GLUT_KEY_UP: { break; }
     }
     glutPostRedisplay();
 }
@@ -345,6 +296,31 @@ GLuint InitializeProgram(GLuint* program)
     return modelParameter;
 }
 
+// Set up the planets and moons
+void InitializePlanets()
+{
+    // Planet 1
+    vector<Moon> moons1;
+    moons1.push_back(Moon(2.0f, glm::vec3(0.1f), 50.0f, 1));
+    moons1.push_back(Moon(3.0f, glm::vec3(0.15f), 40.0f, -1));
+    moons1.push_back(Moon(4.0f, glm::vec3(0.2f), 30.0f, 1));
+    planets.push_back(Planet(glm::vec3(10.0f, 0.0f, 0.0f), glm::vec3(0.5f), 5.0f, moons1));
+
+    // Planet 2
+    vector<Moon> moons2;
+    moons2.push_back(Moon(3.0f, glm::vec3(0.15f), 60.0f, -1));
+    moons2.push_back(Moon(4.5f, glm::vec3(0.2f), 45.0f, 1));
+    planets.push_back(Planet(glm::vec3(20.0f, 0.0f, 0.0f), glm::vec3(0.7f), 15.0f, moons2));
+
+    // Planet 3
+    vector<Moon> moons3;
+    moons3.push_back(Moon(3.5f, glm::vec3(0.1f), 40.0f, 1));
+    moons3.push_back(Moon(5.0f, glm::vec3(0.15f), 35.0f, -1));
+    moons3.push_back(Moon(6.5f, glm::vec3(0.2f), 30.0f, 1));
+    moons3.push_back(Moon(8.0f, glm::vec3(0.25f), 25.0f, -1));
+    planets.push_back(Planet(glm::vec3(30.0f, 0.0f, 0.0f), glm::vec3(0.9f), 2.5f, moons3));
+}
+
 void InitShapes(GLuint modelParameter)
 {
     //create one unit cube in the origin
@@ -360,6 +336,8 @@ void InitShapes(GLuint modelParameter)
 
 int main(int argc, char** argv)
 {
+	InitializePlanets();
+
     glutInitDisplayString("stencil>=2 rgb double depth samples");
     glutInit(&argc, argv);
     glutInitWindowSize(wWindow, hWindow);
