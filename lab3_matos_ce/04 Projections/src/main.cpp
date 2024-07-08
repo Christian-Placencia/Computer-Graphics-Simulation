@@ -59,8 +59,34 @@ int planet1Moons = 3;
 int planet2Moons = 2;
 int planet3Moons = 4;
 
+class Moon {
+public:
+	float orbitRadius;
+	glm::vec3 scale;
+	float rotationSpeed;
+	int direction;
+
+	Moon(float orbitRadius, glm::vec3 scale, float rotationSpeed, int direction) {
+		this->orbitRadius = orbitRadius;
+		this->scale = scale;
+		this->rotationSpeed = rotationSpeed;
+		this->direction = direction;
+	}
+};
+
 class Planet {
+public:
 	glm::vec3 position;
+	glm::vec3 scale;
+	float rotationSpeed;
+	std::vector<Moon> moons;
+
+	Planet(glm::vec3 position, glm::vec3 scale, float rotationSpeed, std::vector<Moon> moons) {
+		this->position = position;
+		this->scale = scale;
+		this->rotationSpeed = rotationSpeed;
+		this->moons = moons;
+	}
 };
 
 /*********************************
