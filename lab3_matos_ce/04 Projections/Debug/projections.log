@@ -1,4 +1,7 @@
 ﻿cl : command line  warning D9035: option 'Gm' has been deprecated and will be removed in a future release
+  shapes.cpp
+  shaders.cpp
   main.cpp
+  Generating Code...
 main.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
   projections.vcxproj -> C:\Users\chbas\OneDrive\2 Materias\UP - Computer Graphics Simulation\Computer-Graphics-Simulation\lab3_matos_ce\04 Projections\Debug\moving boxes.exe

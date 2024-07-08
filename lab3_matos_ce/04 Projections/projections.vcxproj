@@ -67,7 +67,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>../include/; ../; (SolutionDir)Include/glut</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include/; ../; (SolutionDir)Include/glut; ImGui\;ImGui-Simple\Include;%(AdditionalIncludeDirectories); </AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
