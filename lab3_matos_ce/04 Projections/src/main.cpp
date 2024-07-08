@@ -59,6 +59,10 @@ int planet1Moons = 3;
 int planet2Moons = 2;
 int planet3Moons = 4;
 
+class Planet {
+	glm::vec3 position;
+};
+
 /*********************************
 Some OpenGL-related functions
 **********************************/
@@ -100,7 +104,7 @@ void DrawPlanetAndMoons(glm::mat4 m, int numMoons, glm::vec3 planetPosition, glm
 }
 
 //Define the places for the camera
-enum CameraMode { SUN, PLANET1, PLANET2, PLANET3, MOON1, MOON2, MOON3 };
+enum CameraMode { SUN, PLANET1, PLANET2, PLANET3, MOON1_1, MOON1_2, MOON1_3, MOON2_1, MOON2_2, MOON3_1, MOON3_2, MOON3_3, MOON3_4 };
 CameraMode currentCameraMode = SUN;
 
 //the main rendering function
@@ -112,8 +116,14 @@ void RenderObjects()
     glLineWidth(2);
     //set the projection and view once for the scene
     glUniformMatrix4fv(projParameter, 1, GL_FALSE, glm::value_ptr(proj));
+
     glm::vec3 eye;
     glm::vec3 target;
+
+    glm::mat4 m = glm::mat4(1.0);
+
+    // Draw Sun
+    DrawObject(m, sphere, glm::vec3(2.0f), glm::vec3(0.0f, 1.0f, 0.0f), ftime * 10.0f);
 
     switch (currentCameraMode)
     {
@@ -133,15 +143,15 @@ void RenderObjects()
         eye = glm::vec3(30.0f, 2.0f, 30.0f);
         target = glm::vec3(0.0f, 0.0f, 0.0f);
         break;
-    case MOON1:
+    case MOON1_1:
         eye = glm::vec3(12.0f, 2.0f, 12.0f);
         target = glm::vec3(10.0f, 0.0f, 0.0f);
         break;
-    case MOON2:
+    case MOON1_2:
         eye = glm::vec3(14.0f, 2.0f, 14.0f);
         target = glm::vec3(10.0f, 0.0f, 0.0f);
         break;
-    case MOON3:
+    case MOON1_3:
         eye = glm::vec3(16.0f, 2.0f, 16.0f);
         target = glm::vec3(10.0f, 0.0f, 0.0f);
         break;
@@ -150,10 +160,7 @@ void RenderObjects()
     view = glm::lookAt(eye, target, glm::vec3(0, 1, 0));
     glUniformMatrix4fv(viewParameter, 1, GL_FALSE, glm::value_ptr(view));
 
-    glm::mat4 m = glm::mat4(1.0);
-
-    // Draw Sun
-    DrawObject(m, sphere, glm::vec3(2.0f), glm::vec3(0.0f, 1.0f, 0.0f), ftime * 10.0f);
+    
 
     // Draw planets and moons
 
@@ -212,9 +219,9 @@ void Kbd(unsigned char a, int x, int y)
     case '2': { currentCameraMode = PLANET1; break; }
     case '3': { currentCameraMode = PLANET2; break; }
     case '4': { currentCameraMode = PLANET3; break; }
-    case '5': { currentCameraMode = MOON1; break; }
-    case '6': { currentCameraMode = MOON2; break; }
-    case '7': { currentCameraMode = MOON3; break; }
+    case '5': { currentCameraMode = MOON1_1; break; }
+    case '6': { currentCameraMode = MOON1_2; break; }
+    case '7': { currentCameraMode = MOON1_3; break; }
     case 'a': { stacks++; break; }
     case 'A': {
         stacks--;
