@@ -27,6 +27,12 @@
 #include "shaders.h"
 #include "shapes.h"
 
+// Graphical interface
+// #include "imgui.h"
+//#include "imgui_impl_glut.h"
+//#include "imgui_impl_opengl3.h"
+
+
 #pragma warning(disable : 4996)
 #pragma comment(lib, "glew32.lib")
 #pragma comment(lib, "glut32.lib")
@@ -168,6 +174,42 @@ void RenderObjects()
     case PLANET3:
         eye = planets[2].position + glm::vec3(5.0f, 5.0f, 5.0f);
         target = planets[2].position;
+        break;
+    case MOON1_1:
+        eye = planets[0].position + glm::vec3(2.0f, 2.0f, 2.0f);
+        target = planets[0].position + glm::vec3(planets[0].moons[0].orbitRadius, 0.0f, 0.0f);
+        break;
+    case MOON1_2:
+        eye = planets[0].position + glm::vec3(3.0f, 3.0f, 3.0f);
+        target = planets[0].position + glm::vec3(planets[0].moons[1].orbitRadius, 0.0f, 0.0f);
+        break;
+    case MOON1_3:
+        eye = planets[0].position + glm::vec3(4.0f, 4.0f, 4.0f);
+        target = planets[0].position + glm::vec3(planets[0].moons[2].orbitRadius, 0.0f, 0.0f);
+        break;
+    case MOON2_1:
+        eye = planets[1].position + glm::vec3(3.0f, 3.0f, 3.0f);
+        target = planets[1].position + glm::vec3(planets[1].moons[0].orbitRadius, 0.0f, 0.0f);
+        break;
+    case MOON2_2:
+        eye = planets[1].position + glm::vec3(4.5f, 4.5f, 4.5f);
+        target = planets[1].position + glm::vec3(planets[1].moons[1].orbitRadius, 0.0f, 0.0f);
+        break;
+    case MOON3_1:
+        eye = planets[2].position + glm::vec3(3.5f, 3.5f, 3.5f);
+        target = planets[2].position + glm::vec3(planets[2].moons[0].orbitRadius, 0.0f, 0.0f);
+        break;
+    case MOON3_2:
+        eye = planets[2].position + glm::vec3(5.0f, 5.0f, 5.0f);
+        target = planets[2].position + glm::vec3(planets[2].moons[1].orbitRadius, 0.0f, 0.0f);
+        break;
+    case MOON3_3:
+        eye = planets[2].position + glm::vec3(6.5f, 6.5f, 6.5f);
+        target = planets[2].position + glm::vec3(planets[2].moons[2].orbitRadius, 0.0f, 0.0f);
+        break;
+    case MOON3_4:
+        eye = planets[2].position + glm::vec3(8.0f, 8.0f, 8.0f);
+        target = planets[2].position + glm::vec3(planets[2].moons[3].orbitRadius, 0.0f, 0.0f);
         break;
     }
 
