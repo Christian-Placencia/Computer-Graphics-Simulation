@@ -57,11 +57,6 @@ GLint hWindow = 800;
 
 //--------------------------------
 
-// ! Discard
-int planet1Moons = 3;
-int planet2Moons = 2;
-int planet3Moons = 4;
-
 class Moon {
 public:
 	float orbitRadius;
