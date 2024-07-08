@@ -125,6 +125,26 @@ void RenderObjects()
     // Draw Sun
     DrawObject(m, sphere, glm::vec3(2.0f), glm::vec3(0.0f, 1.0f, 0.0f), ftime * 10.0f);
 
+    // Draw planets and moons
+
+    // Parameters for planet 1
+    float planet1MoonOrbitRadii[3] = { 2.0f, 3.0f, 4.0f };
+    glm::vec3 planet1MoonScales[3] = { glm::vec3(0.1f), glm::vec3(0.15f), glm::vec3(0.2f) };
+    float planet1MoonRotationSpeeds[3] = { 50.0f, 40.0f, 30.0f };
+    int planet1MoonDirections[3] = { 1, -1, 1 };
+
+    // Parameters for planet 2
+    float planet2MoonOrbitRadii[2] = { 3.0f, 4.5f };
+    glm::vec3 planet2MoonScales[2] = { glm::vec3(0.15f), glm::vec3(0.2f) };
+    float planet2MoonRotationSpeeds[2] = { 60.0f, 45.0f };
+    int planet2MoonDirections[2] = { -1, 1 };
+
+    // Parameters for planet 3
+    float planet3MoonOrbitRadii[4] = { 3.5f, 5.0f, 6.5f, 8.0f };
+    glm::vec3 planet3MoonScales[4] = { glm::vec3(0.1f), glm::vec3(0.15f), glm::vec3(0.2f), glm::vec3(0.25f) };
+    float planet3MoonRotationSpeeds[4] = { 40.0f, 35.0f, 30.0f, 25.0f };
+    int planet3MoonDirections[4] = { 1, -1, 1, -1 };
+
     switch (currentCameraMode)
     {
     case SUN:
@@ -162,25 +182,7 @@ void RenderObjects()
 
     
 
-    // Draw planets and moons
 
-    // Parameters for planet 1
-    float planet1MoonOrbitRadii[3] = { 2.0f, 3.0f, 4.0f };
-    glm::vec3 planet1MoonScales[3] = { glm::vec3(0.1f), glm::vec3(0.15f), glm::vec3(0.2f) };
-    float planet1MoonRotationSpeeds[3] = { 50.0f, 40.0f, 30.0f };
-    int planet1MoonDirections[3] = { 1, -1, 1 };
-
-    // Parameters for planet 2
-    float planet2MoonOrbitRadii[2] = { 3.0f, 4.5f };
-    glm::vec3 planet2MoonScales[2] = { glm::vec3(0.15f), glm::vec3(0.2f) };
-    float planet2MoonRotationSpeeds[2] = { 60.0f, 45.0f };
-    int planet2MoonDirections[2] = { -1, 1 };
-
-    // Parameters for planet 3
-    float planet3MoonOrbitRadii[4] = { 3.5f, 5.0f, 6.5f, 8.0f };
-    glm::vec3 planet3MoonScales[4] = { glm::vec3(0.1f), glm::vec3(0.15f), glm::vec3(0.2f), glm::vec3(0.25f) };
-    float planet3MoonRotationSpeeds[4] = { 40.0f, 35.0f, 30.0f, 25.0f };
-    int planet3MoonDirections[4] = { 1, -1, 1, -1 };
 
     // Draw planets with moons
     DrawPlanetAndMoons(m, planet1Moons, glm::vec3(10.0f, 0.0f, 0.0f), glm::vec3(0.5f), 5.0f, planet1MoonOrbitRadii, planet1MoonScales, planet1MoonRotationSpeeds, planet1MoonDirections);
