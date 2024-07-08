@@ -34,7 +34,7 @@
 // Graphical interface
 // #include "imgui.h"
 #include "imgui_impl_glut.h"
-#include "imgui_impl_opengl2.h"
+#include "imgui_impl_opengl3.h"
 
 #include <iostream>
 #include "imgui.h"
@@ -123,9 +123,12 @@ public:
 // Define the planets and moons
 vector<Planet> planets;
 
+// Camera settings
+glm::vec3 cameraOffset = glm::vec3(0.0f, 10.0f, 10.0f);
+
 // Define the places for the camera
 enum CameraMode { SUN, PLANET1, PLANET2, PLANET3, MOON1_1, MOON1_2, MOON1_3, MOON2_1, MOON2_2, MOON3_1, MOON3_2, MOON3_3, MOON3_4 };
-CameraMode currentCameraMode = SUN;
+int currentCameraMode = 0; // SUN, PLANET1, PLANET2, PLANET3, MOON1_1, MOON1_2, MOON1_3, MOON2_1, MOON2_2, MOON3_1, MOON3_2, MOON3_3, MOON3_4
 
 /*********************************
 Some OpenGL-related functions
@@ -186,49 +189,46 @@ void RenderObjects()
     glm::vec3 eye;
     glm::vec3 target;
 
-    // Constant camera offset
-	glm::vec3 cameraOffset = glm::vec3(0.0f, 10.0f, 10.0f);
-
 	// Set the camera position based on the current camera mode
     switch (currentCameraMode)
     {
-    case SUN:
+    case 0:
         target = glm::vec3(0.0f, 0.0f, 0.0f);
         break;
-    case PLANET1:
+    case 1:
         target = planets[0].getPosition();
         break;
-    case PLANET2:
+    case 2:
         target = planets[1].getPosition();
         break;
-    case PLANET3:
+    case 3:
         target = planets[2].getPosition();
         break;
-    case MOON1_1:
+    case 4:
         target = planets[0].moons[0].getPosition() + planets[0].getPosition();;
         break;
-    case MOON1_2:
+    case 5:
         target = planets[0].moons[1].getPosition() + planets[0].getPosition();;
         break;
-    case MOON1_3:
+    case 6:
         target = planets[0].moons[2].getPosition() + planets[0].getPosition();;
         break;
-    case MOON2_1:
+    case 7:
         target = planets[1].moons[0].getPosition() + planets[1].getPosition();;
         break;
-    case MOON2_2:
+    case 8:
         target = planets[1].moons[1].getPosition() + planets[1].getPosition();;
         break;
-    case MOON3_1:
+    case 9:
         target = planets[2].moons[0].getPosition() + planets[2].getPosition();;
         break;
-    case MOON3_2:
+    case 10:
         target = planets[2].moons[1].getPosition() + planets[2].getPosition();;
         break;
-    case MOON3_3:
+    case 11:
         target = planets[2].moons[2].getPosition() + planets[2].getPosition();;
         break;
-    case MOON3_4:
+    case 12:
         target = planets[2].moons[3].getPosition() + planets[2].getPosition();;
         break;
     }
@@ -263,16 +263,64 @@ void Idle(void)
         ftime += 0.01; // Decreased the speed
     }
 
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGLUT_NewFrame();
+    ImGui::NewFrame();
+
+    // Create ImGui window
+    ImGui::Begin("Controls");
+    ImGui::Text("Camera Offset");
+    ImGui::SliderFloat("X", &cameraOffset[0], -50.0f, 50.0f);
+    ImGui::SliderFloat("Y", &cameraOffset[1], -50.0f, 50.0f);
+    ImGui::SliderFloat("Z", &cameraOffset[2], -50.0f, 50.0f);
+	ImGui::Text("Camera Mode");
+    const char* planets[] = { 
+        "Sun", 
+        "Planet 1", 
+        "Planet 2", 
+        "Planet 3", 
+        "Moon 1-1", 
+        "Moon 1-2", 
+        "Moon 1-3", 
+        "Moon 2-1",
+        "Moon 2-2",
+        "Moon 3-1",
+		"Moon 3-2",
+        "Moon 3-3",
+        "Moon 3-4"};
+    if (ImGui::Combo("Planet", &currentCameraMode, planets, IM_ARRAYSIZE(planets))) {
+        switch (currentCameraMode) {
+        case 0: { currentCameraMode = SUN; break; }
+        case 1: { currentCameraMode = PLANET1; break; }
+        case 2: { currentCameraMode = PLANET2; break; }
+        case 3: { currentCameraMode = PLANET3; break; }
+        case 4: { currentCameraMode = MOON1_1; break; }
+        case 5: { currentCameraMode = MOON1_2; break; }
+        case 6: { currentCameraMode = MOON1_3; break; }
+        case 7: { currentCameraMode = MOON2_1; break; }
+        case 8: { currentCameraMode = MOON2_2; break; }
+        case 9: { currentCameraMode = MOON3_1; break; }
+        case 10: { currentCameraMode = MOON3_2; break; }
+        case 11: { currentCameraMode = MOON3_3; break; }
+        case 12: { currentCameraMode = MOON3_4; break; }
+        }
+    }
+    ImGui::End();
+
+    ImGui::Render();
+
+    // Clear the screen
     glClearColor(0.1, 0.1, 0.1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shaderProgram);
+
     RenderObjects();
+
+    // Render ImGui
+    
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
     glutSwapBuffers();
-}
-
-void Display(void)
-{
-
 }
 
 //keyboard callback
@@ -284,21 +332,34 @@ void Kbd(unsigned char a, int x, int y)
     case 32: { needRedisplay = !needRedisplay; break; }
     case 'S':
     case 's': { sign = -sign; break; }
-    case '1': { currentCameraMode = SUN; break; }
-    case '2': { currentCameraMode = PLANET1; break; }
-    case '3': { currentCameraMode = PLANET2; break; }
-    case '4': { currentCameraMode = PLANET3; break; }
-    case '5': { currentCameraMode = MOON1_1; break; }
-    case '6': { currentCameraMode = MOON1_2; break; }
-    case '7': { currentCameraMode = MOON1_3; break; }
-    case 'a': { stacks++; break; }
-    case 'A': {
+    case 'a': { currentCameraMode = SUN; break; }
+    case 'b': { currentCameraMode = PLANET1; break; }
+    case 'c': { currentCameraMode = PLANET2; break; }
+    case 'd': { currentCameraMode = PLANET3; break; }
+    case 'e': { currentCameraMode = MOON1_1; break; }
+    case 'f': { currentCameraMode = MOON1_2; break; }
+    case 'g': { currentCameraMode = MOON1_3; break; }
+	case 'h': { currentCameraMode = MOON2_1; break; }
+	case 'i': { currentCameraMode = MOON2_2; break; }
+	case 'j': { currentCameraMode = MOON3_1; break; }
+	case 'k': { currentCameraMode = MOON3_2; break; }
+	case 'l': { currentCameraMode = MOON3_3; break; }
+	case 'm': { currentCameraMode = MOON3_4; break; }
+    
+    // Move offset with keys
+	case 37: { cameraOffset[0] -= 1.0f; break; } // Left
+	case 38: { cameraOffset[2] += 1.0f; break; } // Up
+	case 39: { cameraOffset[0] += 1.0f; break; } // Right
+	case 40: { cameraOffset[2] -= 1.0f; break; } // Down
+
+    case '1': { stacks++; break; }
+    case '2': {
         stacks--;
         if (stacks < 2) stacks = 2;
         break;
     }
-    case 'b': { slices++; break; }
-    case 'B': {
+    case '3': { slices++; break; }
+    case '4': {
         slices--;
         if (slices < 2) slices = 2;
         break;
@@ -314,10 +375,22 @@ void SpecKbdPress(int a, int x, int y)
 {
     switch (a)
     {
-    case GLUT_KEY_LEFT: { break; }
-    case GLUT_KEY_RIGHT: { break; }
-    case GLUT_KEY_DOWN: { break; }
-    case GLUT_KEY_UP: { break; }
+    case GLUT_KEY_LEFT: { 
+		cameraOffset[0] -= 10.0f;
+        break; 
+    }
+    case GLUT_KEY_RIGHT: { 
+		cameraOffset[0] += 10.0f;
+        break; 
+    }
+    case GLUT_KEY_DOWN: { 
+		cameraOffset[2] -= 10.0f;
+        break; 
+    }
+    case GLUT_KEY_UP: { 
+		cameraOffset[2] += 10.0f;
+        break; 
+    }
     }
     glutPostRedisplay();
 }
@@ -399,19 +472,6 @@ void InitShapes(GLuint modelParameter)
     sphere->SetMatrixParamToShader(modelParameter);
 }
 
-void UserInterface()
-{
-	float cameraOffsetX = 0.0f;
-	float cameraOffsetY = 10.0f;
-	float cameraOffsetZ = 10.0f;
-
-    // ImGui::Text("Camera Offset");
- //   ImGui::SliderFloat("X", &cameraOffsetX, -50.0f, 50.0f);
- //   ImGui::SliderFloat("Y", &cameraOffsetY, -50.0f, 50.0f);
- //   ImGui::SliderFloat("Z", &cameraOffsetZ, -50.0f, 50.0f);
-
-}
-
 int main(int argc, char** argv)
 {
 	InitializePlanets();
@@ -425,7 +485,15 @@ int main(int argc, char** argv)
     if (GLEW_OK != err) {
         fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
     }
-    glutDisplayFunc(Display);
+
+    // Initialize ImGui
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+
+    ImGui_ImplGLUT_Init();
+    ImGui_ImplOpenGL3_Init();
+
     glutIdleFunc(Idle);
     glutMouseFunc(Mouse);
     glutReshapeFunc(Reshape);
@@ -433,10 +501,15 @@ int main(int argc, char** argv)
     glutSpecialUpFunc(SpecKbdRelease); //smooth motion
     glutSpecialFunc(SpecKbdPress);
 
-	UserInterface();
-
     GLuint modelParameter = InitializeProgram(&shaderProgram);
     InitShapes(modelParameter);
     glutMainLoop();
+
+    //// Cleanup ImGui
+    //ImGui_ImplOpenGL2_Shutdown();
+    //ImGui_ImplGLUT_Shutdown();
+    //ImGui::DestroyContext();
+
+
     return 0;
 }
