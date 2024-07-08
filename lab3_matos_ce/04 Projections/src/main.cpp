@@ -76,6 +76,17 @@ public:
 		this->rotationSpeed = rotationSpeed;
 		this->direction = direction;
 	}
+
+    // Current position getter
+    glm::vec3 getPosition() {
+        // Rotate aroun the planet
+		glm::mat4 m = glm::mat4(1.0);
+        m = glm::rotate(m, glm::radians(ftime * rotationSpeed * direction), glm::vec3(0.0f, 1.0f, 0.0f));
+        m = glm::translate(m, glm::vec3(orbitRadius, 0.0f, 0.0f));
+        glm::vec3 position = glm::vec3(m[3]);
+		return position;
+	}
+
 };
 
 class Planet {
@@ -91,6 +102,15 @@ public:
 		this->rotationSpeed = rotationSpeed;
 		this->moons = moons;
 	}
+
+	// Current position getter
+    glm::vec3 getPosition() {
+		glm::mat4 m = glm::mat4(1.0);
+		m = glm::rotate(m, ftime * rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
+		m = glm::translate(m, position);
+		glm::vec3 position = glm::vec3(m[3]);
+		return position;
+    }
 };
 
 // Define the planets and moons
@@ -143,9 +163,12 @@ void DrawPlanetAndMoons(glm::mat4 m, Planet& planet)
 	}
 }
 
+
+
 // The main rendering function
 void RenderObjects()
 {
+	// Set the background color
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glColor3f(0, 0, 0);
     glPointSize(2);
@@ -156,62 +179,54 @@ void RenderObjects()
     glm::vec3 eye;
     glm::vec3 target;
 
+    // Constant camera offset
+	glm::vec3 cameraOffset = glm::vec3(0.0f, 10.0f, 10.0f);
+
 	// Set the camera position based on the current camera mode
     switch (currentCameraMode)
     {
     case SUN:
-        eye = glm::vec3(0.0f, 0.0f, 50.0f);
         target = glm::vec3(0.0f, 0.0f, 0.0f);
         break;
     case PLANET1:
-        eye = planets[0].position + glm::vec3(5.0f, 5.0f, 5.0f);
-        target = planets[0].position;
+        target = planets[0].getPosition();
         break;
     case PLANET2:
-        eye = planets[1].position + glm::vec3(5.0f, 5.0f, 5.0f);
-        target = planets[1].position;
+        target = planets[1].getPosition();
         break;
     case PLANET3:
-        eye = planets[2].position + glm::vec3(5.0f, 5.0f, 5.0f);
-        target = planets[2].position;
+        target = planets[2].getPosition();
         break;
     case MOON1_1:
-        eye = planets[0].position + glm::vec3(2.0f, 2.0f, 2.0f);
-        target = planets[0].position + glm::vec3(planets[0].moons[0].orbitRadius, 0.0f, 0.0f);
+        target = planets[0].moons[0].getPosition() + planets[0].getPosition();;
         break;
     case MOON1_2:
-        eye = planets[0].position + glm::vec3(3.0f, 3.0f, 3.0f);
-        target = planets[0].position + glm::vec3(planets[0].moons[1].orbitRadius, 0.0f, 0.0f);
+        target = planets[0].moons[1].getPosition() + planets[0].getPosition();;
         break;
     case MOON1_3:
-        eye = planets[0].position + glm::vec3(4.0f, 4.0f, 4.0f);
-        target = planets[0].position + glm::vec3(planets[0].moons[2].orbitRadius, 0.0f, 0.0f);
+        target = planets[0].moons[2].getPosition() + planets[0].getPosition();;
         break;
     case MOON2_1:
-        eye = planets[1].position + glm::vec3(3.0f, 3.0f, 3.0f);
-        target = planets[1].position + glm::vec3(planets[1].moons[0].orbitRadius, 0.0f, 0.0f);
+        target = planets[1].moons[0].getPosition() + planets[1].getPosition();;
         break;
     case MOON2_2:
-        eye = planets[1].position + glm::vec3(4.5f, 4.5f, 4.5f);
-        target = planets[1].position + glm::vec3(planets[1].moons[1].orbitRadius, 0.0f, 0.0f);
+        target = planets[1].moons[1].getPosition() + planets[1].getPosition();;
         break;
     case MOON3_1:
-        eye = planets[2].position + glm::vec3(3.5f, 3.5f, 3.5f);
-        target = planets[2].position + glm::vec3(planets[2].moons[0].orbitRadius, 0.0f, 0.0f);
+        target = planets[2].moons[0].getPosition() + planets[2].getPosition();;
         break;
     case MOON3_2:
-        eye = planets[2].position + glm::vec3(5.0f, 5.0f, 5.0f);
-        target = planets[2].position + glm::vec3(planets[2].moons[1].orbitRadius, 0.0f, 0.0f);
+        target = planets[2].moons[1].getPosition() + planets[2].getPosition();;
         break;
     case MOON3_3:
-        eye = planets[2].position + glm::vec3(6.5f, 6.5f, 6.5f);
-        target = planets[2].position + glm::vec3(planets[2].moons[2].orbitRadius, 0.0f, 0.0f);
+        target = planets[2].moons[2].getPosition() + planets[2].getPosition();;
         break;
     case MOON3_4:
-        eye = planets[2].position + glm::vec3(8.0f, 8.0f, 8.0f);
-        target = planets[2].position + glm::vec3(planets[2].moons[3].orbitRadius, 0.0f, 0.0f);
+        target = planets[2].moons[3].getPosition() + planets[2].getPosition();;
         break;
     }
+
+    eye = target + cameraOffset;
 
 	// Set the view matrix
     view = glm::lookAt(eye, target, glm::vec3(0, 1, 0));
@@ -338,9 +353,9 @@ void InitializePlanets()
 {
     // Planet 1
     vector<Moon> moons1;
-    moons1.push_back(Moon(2.0f, glm::vec3(0.1f), 50.0f, 1));
-    moons1.push_back(Moon(3.0f, glm::vec3(0.15f), 40.0f, -1));
-    moons1.push_back(Moon(4.0f, glm::vec3(0.2f), 30.0f, 1));
+    moons1.push_back(Moon(2.0f, glm::vec3(0.1f), 5000.0f, 1));
+    moons1.push_back(Moon(3.0f, glm::vec3(0.15f), 4000.0f, -1));
+    moons1.push_back(Moon(4.0f, glm::vec3(0.2f), 30000.0f, 1));
     planets.push_back(Planet(glm::vec3(10.0f, 0.0f, 0.0f), glm::vec3(0.5f), 5.0f, moons1));
 
     // Planet 2
