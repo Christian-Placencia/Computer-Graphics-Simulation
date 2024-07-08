@@ -1,7 +1,7 @@
 ﻿cl : command line  warning D9035: option 'Gm' has been deprecated and will be removed in a future release
-  shapes.cpp
-  shaders.cpp
   main.cpp
-  Generating Code...
-main.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
+C:\Users\chbas\OneDrive\2 Materias\UP - Computer Graphics Simulation\Computer-Graphics-Simulation\lab3_matos_ce\04 Projections\src\main.cpp(263,22): warning C4305: '+=': truncation from 'double' to 'GLfloat'
+C:\Users\chbas\OneDrive\2 Materias\UP - Computer Graphics Simulation\Computer-Graphics-Simulation\lab3_matos_ce\04 Projections\src\main.cpp(266,28): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
+C:\Users\chbas\OneDrive\2 Materias\UP - Computer Graphics Simulation\Computer-Graphics-Simulation\lab3_matos_ce\04 Projections\src\main.cpp(266,23): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
+C:\Users\chbas\OneDrive\2 Materias\UP - Computer Graphics Simulation\Computer-Graphics-Simulation\lab3_matos_ce\04 Projections\src\main.cpp(266,18): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
   projections.vcxproj -> C:\Users\chbas\OneDrive\2 Materias\UP - Computer Graphics Simulation\Computer-Graphics-Simulation\lab3_matos_ce\04 Projections\Debug\moving boxes.exe

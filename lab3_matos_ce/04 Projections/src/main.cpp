@@ -19,6 +19,10 @@
 #include <string>
 #include <vector>
 #include <GL/glew.h>
+
+#define _LIB
+#define FREEGLUT_LIB_PRAGMAS 0
+
 #include <GL/glut.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -29,8 +33,11 @@
 
 // Graphical interface
 // #include "imgui.h"
-//#include "imgui_impl_glut.h"
-//#include "imgui_impl_opengl3.h"
+#include "imgui_impl_glut.h"
+#include "imgui_impl_opengl2.h"
+
+#include <iostream>
+#include "imgui.h"
 
 
 #pragma warning(disable : 4996)
@@ -232,6 +239,9 @@ void RenderObjects()
     view = glm::lookAt(eye, target, glm::vec3(0, 1, 0));
     glUniformMatrix4fv(viewParameter, 1, GL_FALSE, glm::value_ptr(view));
 
+    // Clear the buffers
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     // Set the model matrix to the identity matrix
     glm::mat4 m = glm::mat4(1.0);
 
@@ -242,6 +252,9 @@ void RenderObjects()
 	for (Planet& planet : planets) {
 		DrawPlanetAndMoons(m, planet);
 	}
+
+    // Flush the graphis pipeline
+    glFlush();
 }
 
 void Idle(void)
@@ -386,6 +399,19 @@ void InitShapes(GLuint modelParameter)
     sphere->SetMatrixParamToShader(modelParameter);
 }
 
+void UserInterface()
+{
+	float cameraOffsetX = 0.0f;
+	float cameraOffsetY = 10.0f;
+	float cameraOffsetZ = 10.0f;
+
+    // ImGui::Text("Camera Offset");
+ //   ImGui::SliderFloat("X", &cameraOffsetX, -50.0f, 50.0f);
+ //   ImGui::SliderFloat("Y", &cameraOffsetY, -50.0f, 50.0f);
+ //   ImGui::SliderFloat("Z", &cameraOffsetZ, -50.0f, 50.0f);
+
+}
+
 int main(int argc, char** argv)
 {
 	InitializePlanets();
@@ -406,6 +432,8 @@ int main(int argc, char** argv)
     glutKeyboardFunc(Kbd); //+ and -
     glutSpecialUpFunc(SpecKbdRelease); //smooth motion
     glutSpecialFunc(SpecKbdPress);
+
+	UserInterface();
 
     GLuint modelParameter = InitializeProgram(&shaderProgram);
     InitShapes(modelParameter);
