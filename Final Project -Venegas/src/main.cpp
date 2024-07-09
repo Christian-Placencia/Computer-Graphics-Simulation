@@ -61,6 +61,10 @@ float enemyKsColor[3] = { 0, 1, 0 };
 float enemyKaColor[3] = { 0, 0, 0 };
 float enemyKdColor[3] = { 1, 0, 0 };
 
+float enemyFastKsColor[3] = { 1, 0, 0 }; 
+float enemyFastKaColor[3] = { 0, 0, 0 };
+float enemyFastKdColor[3] = { 1, 0, 0 };
+
 glm::vec4 lPos;
 float ltime = 0;
 float timeDelta = 0;
@@ -77,11 +81,15 @@ int minFilter = 0, maxFilter = 0;
 
 float spherePosX = 0.0f;
 float spherePosY = 0.0f;
-float moveSpeed = 0.05f;  // Incrementar la velocidad de movimiento
+float moveSpeed = 0.07f;  // Incrementar la velocidad de movimiento
 
-float enemyPosX = 10.0f;  // Coordenadas iniciales en la esquina superior derecha
+float enemyPosX = 10.0f;  
 float enemyPosY = 10.0f;
-float enemySpeed = 0.0008f;
+float enemySpeed = 0.0006f;
+
+float enemyFastPosX = -10.0f;  
+float enemyFastPosY = 10.0f;
+float enemyFastSpeed = 0.0009f;
 
 GLuint VAO, VBO;
 static bool textureLoaded = false;
@@ -337,6 +345,16 @@ void EnemyIdle()
     }
     enemyPosX += directionX * enemySpeed;
     enemyPosY += directionY * enemySpeed;
+
+    float directionXFast = spherePosX - enemyFastPosX;
+    float directionYFast = spherePosY - enemyFastPosY;
+    float lengthFast = sqrt(directionXFast * directionXFast + directionYFast * directionYFast);
+    if (lengthFast != 0) {
+        directionXFast /= lengthFast;
+        directionYFast /= lengthFast;
+    }
+    enemyFastPosX += directionXFast * enemyFastSpeed;
+    enemyFastPosY += directionYFast * enemyFastSpeed;
 }
 
 int main()
@@ -473,7 +491,7 @@ int main()
 
         glDrawArrays(GL_TRIANGLES, 0, points / 3);
 
-        // Renderizar el enemigo
+        // Renderizar el primer enemigo
         glm::mat4 modelEnemy = glm::translate(glm::mat4(1.0f), glm::vec3(enemyPosX, 0.0f, enemyPosY));
         modelEnemy = glm::scale(modelEnemy, glm::vec3(0.4f, 0.4f, 0.4f));  // Ajustar el tamaño de la esfera
         glm::mat4 modelViewEnemy = proj * view * modelEnemy;
@@ -488,6 +506,25 @@ int main()
         glUniform3fv(kaParameter, 1, enemyKaColor);
         glUniform3fv(kdParameter, 1, enemyKdColor);
         glUniform3fv(ksParameter, 1, enemyKsColor);
+        glUniform1fv(shParameter, 1, &sh);
+
+        glDrawArrays(GL_TRIANGLES, 0, points / 3);
+
+        // Render fast enemy
+        glm::mat4 modelEnemyFast = glm::translate(glm::mat4(1.0f), glm::vec3(enemyFastPosX, 0.0f, enemyFastPosY));
+        modelEnemyFast = glm::scale(modelEnemyFast, glm::vec3(0.4f, 0.4f, 0.4f));  // Ajustar el tamaño del enemigo rápido
+        glm::mat4 modelViewEnemyFast = proj * view * modelEnemyFast;
+        glm::mat3 modelViewNEnemyFast = glm::mat3(view * modelEnemyFast);
+        modelViewNEnemyFast = glm::transpose(glm::inverse(modelViewNEnemyFast));
+
+        glUniformMatrix4fv(modelParameter, 1, GL_FALSE, glm::value_ptr(modelEnemyFast));
+        glUniformMatrix4fv(viewParameter, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(projParameter, 1, GL_FALSE, glm::value_ptr(proj));
+        glUniformMatrix3fv(modelViewNParameter, 1, GL_FALSE, glm::value_ptr(modelViewNEnemyFast));
+
+        glUniform3fv(kaParameter, 1, enemyFastKaColor);
+        glUniform3fv(kdParameter, 1, enemyFastKdColor);
+        glUniform3fv(ksParameter, 1, enemyFastKsColor);
         glUniform1fv(shParameter, 1, &sh);
 
         glDrawArrays(GL_TRIANGLES, 0, points / 3);
