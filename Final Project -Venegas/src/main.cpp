@@ -79,12 +79,14 @@ float spherePosX = 0.0f;
 float spherePosY = 0.0f;
 float moveSpeed = 0.05f;  // Incrementar la velocidad de movimiento
 
-float enemyPosX = 4.0f;  // Coordenadas iniciales en la esquina superior derecha
-float enemyPosY = 4.0f;
-float enemySpeed = 0.02f;
+float enemyPosX = 10.0f;  // Coordenadas iniciales en la esquina superior derecha
+float enemyPosY = 10.0f;
+float enemySpeed = 0.0008f;
 
 GLuint VAO, VBO;
 static bool textureLoaded = false;
+
+bool showMenu = true;
 
 void LoadTexture()
 {
@@ -304,6 +306,7 @@ void InitShaders(GLuint* program)
 
     *program = CreateProgram(shaderList);
 
+    using namespace std;
     std::for_each(shaderList.begin(), shaderList.end(), glDeleteShader);
 
     glUniform1i(glGetUniformLocation(shaderProg, "tex"), 0);
@@ -392,42 +395,44 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("Texturing");
-        if (ImGui::SliderFloat("u", &u, 0.1, 10.0, "%f", 0)) {
-            BuildScene(u, v, subdivision, scene);
-        }
-        if (ImGui::SliderFloat("v", &v, 0.1, 10.0, "%f", 0)) {
-            BuildScene(u, v, subdivision, scene);
-        }
-        if (ImGui::SliderInt("Subdivision", &subdivision, 1, 100, "%i", 0)) {
-            BuildScene(u, v, subdivision, scene);
-        }
+        if (showMenu) {
+            ImGui::Begin("Texturing");
+            if (ImGui::SliderFloat("u", &u, 0.1, 10.0, "%f", 0)) {
+                BuildScene(u, v, subdivision, scene);
+            }
+            if (ImGui::SliderFloat("v", &v, 0.1, 10.0, "%f", 0)) {
+                BuildScene(u, v, subdivision, scene);
+            }
+            if (ImGui::SliderInt("Subdivision", &subdivision, 1, 100, "%i", 0)) {
+                BuildScene(u, v, subdivision, scene);
+            }
 
-        if (ImGui::RadioButton("Sphere", &scene, 1)) {
-            BuildScene(u, v, subdivision, scene);
+            if (ImGui::RadioButton("Sphere", &scene, 1)) {
+                BuildScene(u, v, subdivision, scene);
+            }
+
+            ImGui::RadioButton("No tex", &texAs, 0); ImGui::SameLine();
+            ImGui::RadioButton("Tex as Color", &texAs, 1); ImGui::SameLine();
+            ImGui::RadioButton("Tex as diffuse", &texAs, 2); ImGui::SameLine();
+            ImGui::RadioButton("Tex as specular", &texAs, 3); ImGui::SameLine();
+            ImGui::RadioButton("Tex as ambient", &texAs, 4);
+
+            if (ImGui::Checkbox("Filled", &filled)) {
+                if (filled) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                else glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            }
+            ImGui::ColorEdit3("Mat. Ambient", kaColor);
+            ImGui::ColorEdit3("Mat. Diffuse", kdColor);
+            ImGui::ColorEdit3("Mat. Specular", ksColor);
+            ImGui::SliderFloat("Shininess", &sh, 0, 200, "%f", 0);
+
+            ImGui::ColorEdit3("Light Ambient", laColor);
+            ImGui::ColorEdit3("Light Diffuse", ldColor);
+            ImGui::ColorEdit3("Light Specular", lsColor);
+            ImGui::SliderFloat("Speed", &timeDelta, 0.0, 0.3, "%f", 0);
+
+            ImGui::End();
         }
-
-        ImGui::RadioButton("No tex", &texAs, 0); ImGui::SameLine();
-        ImGui::RadioButton("Tex as Color", &texAs, 1); ImGui::SameLine();
-        ImGui::RadioButton("Tex as diffuse", &texAs, 2); ImGui::SameLine();
-        ImGui::RadioButton("Tex as specular", &texAs, 3); ImGui::SameLine();
-        ImGui::RadioButton("Tex as ambient", &texAs, 4);
-
-        if (ImGui::Checkbox("Filled", &filled)) {
-            if (filled) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            else glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        }
-        ImGui::ColorEdit3("Mat. Ambient", kaColor);
-        ImGui::ColorEdit3("Mat. Diffuse", kdColor);
-        ImGui::ColorEdit3("Mat. Specular", ksColor);
-        ImGui::SliderFloat("Shininess", &sh, 0, 200, "%f", 0);
-
-        ImGui::ColorEdit3("Light Ambient", laColor);
-        ImGui::ColorEdit3("Light Diffuse", ldColor);
-        ImGui::ColorEdit3("Light Specular", lsColor);
-        ImGui::SliderFloat("Speed", &timeDelta, 0.0, 0.3, "%f", 0);
-
-        ImGui::End();
 
         // Actualizar el enemigo
         EnemyIdle();
