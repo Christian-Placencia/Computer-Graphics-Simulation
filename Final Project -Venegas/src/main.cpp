@@ -11,7 +11,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 #include <stdio.h>
-#include <iostream>
 #include <string.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
