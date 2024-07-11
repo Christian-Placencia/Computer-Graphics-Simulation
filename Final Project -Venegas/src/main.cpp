@@ -51,9 +51,15 @@ GLint laParameter, ldParameter, lsParameter, lPosParameter;
 // Light properties
 float sh = 100;
 
+// Camera settings
+GLFWwindow* window;
+glm::mat4 proj = glm::ortho(-4.5f, 4.5f, -5.0f, 5.0f, 0.01f, 1000.0f);
+glm::mat4 view = glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0, 0, 0), glm::vec3(0, 0, -1));
+
 // Global variables
 glm::vec3 playerPos(0.0f, 0.0f, 0.0f);
 float deltaTime = 0;
+float currentFrame;
 
 enum class EnemyType {
     NORMAL,
@@ -99,6 +105,7 @@ public:
 class Player : public GameObject {
 public:
     int health = 10;
+    float speed = 5.0f;
 
     // Player is blue
     Player(glm::vec3 pos, glm::vec3 sz)
@@ -106,6 +113,15 @@ public:
 
     void update(GLfloat dt) override {
         // Update player position based on input
+        float moveAmount = speed * dt;
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            position.z -= moveAmount;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            position.z += moveAmount;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            position.x -= moveAmount;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)  
+            position.x += moveAmount;
     }
 };
 
@@ -117,7 +133,7 @@ class Enemy : public GameObject {
 
     // Normal enemy is red
     Enemy(glm::vec3 pos, glm::vec3 sz)
-        : GameObject(pos, sz, 1, glm::vec3(1, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 0, 0)){}
+        : GameObject(pos, sz, 1, glm::vec3(1,1,1), glm::vec3(1,1,1), glm::vec3(1,1,1)){}
 
     void update(GLfloat dt) override {
         // Update enemy position based on AI or other logic
@@ -165,6 +181,8 @@ class Bullet : public GameObject {
 
 // Enemy vector
 std::vector<Enemy> enemies;
+std::vector<FastEnemy> fastEnemies;
+std::vector<Bullet> bullets;
 
 // Enemy vector
 glm::vec4 lPos;
@@ -420,19 +438,28 @@ void InitShaders(GLuint* program)
     texAsParameter = glGetUniformLocation(shaderProg, "texAs");
 }
 
-// Spawn enemy in 1, 1 every 5 seconds
-void SpawnEnemy(glm::vec2 position, float spawnInterval)
+// Function to spawn enemies
+void SpawnEnemy(glm::vec2 position, float spawnInterval, EnemyType type = EnemyType::NORMAL)
 {
     static float spawnTimer = 0.0f;
-
     spawnTimer += deltaTime;
+
+    // Check if it's time to spawn a new enemy
     if (spawnTimer >= spawnInterval) {
-        // Create enemy object
-        Enemy newEnemy(glm::vec3(position.x, 0, position.y), glm::vec3(0.4f, 0.4f, 0.4f));
-        
-        // Add enemy to vector
-        enemies.push_back(newEnemy);
-        
+        // Create enemy object and add to vector
+        if (type == EnemyType::NORMAL)
+        {
+            Enemy newEnemy(glm::vec3(position.x, 0, position.y), glm::vec3(0.4f, 0.4f, 0.4f));
+            enemies.push_back(newEnemy);
+        }
+            
+        else if (type == EnemyType::FAST)
+        {
+            FastEnemy newEnemy(glm::vec3(position.x, 0, position.y), glm::vec3(0.4f, 0.4f, 0.4f));
+            fastEnemies.push_back(newEnemy);
+        }
+
+        // Reset timer
         spawnTimer = 0.0f;
     }
 }
@@ -451,7 +478,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Top-Down Shooter", NULL, NULL);
+    window = glfwCreateWindow(1920, 1080, "Top-Down Shooter", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Cannot open GLFW window" << std::endl;
@@ -490,36 +517,39 @@ int main()
     // Create player object
     Player player(glm::vec3(0, 0, 0), glm::vec3(0.4f, 0.4f, 0.4f));
 
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        // Cosas de Christian
-        float currentFrame = glfwGetTime();
+        // Time flow
+        currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
         processInput(window, deltaTime);
 
-        // Enemigo GameObject
         // Create enemy objects
-        SpawnEnemy(glm::vec2(1, 1), 5.0f);
-
-        // Vistas
-        glm::mat4 proj = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.01f, 1000.0f);
-        glm::mat4 view = glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0, 0, 0), glm::vec3(0, 0, -1));
+        SpawnEnemy(glm::vec2(1, 1), 10.0f, EnemyType::NORMAL);
+        SpawnEnemy(glm::vec2(-2, -3), 20.0f, EnemyType::FAST);
 
         // Rendering in the main 
         playerPos = player.position;
+        player.update(deltaTime);
+        player.render(proj, view, modelParameter, viewParameter, projParameter, modelViewNParameter, sh, points);
 
         // Render and update enemies in enemy vector
         for (int i = 0; i < enemies.size(); i++) {
             enemies[i].update(deltaTime);
-
             enemies[i].render(proj, view, modelParameter, viewParameter, projParameter, modelViewNParameter, sh, points);
+        }
+
+        // Render and update enemies in fast enemy vector
+        for (int i = 0; i < fastEnemies.size(); i++) {
+            fastEnemies[i].update(deltaTime);
+            fastEnemies[i].render(proj, view, modelParameter, viewParameter, projParameter, modelViewNParameter, sh, points);
         }
 
         ImGui::Render();
