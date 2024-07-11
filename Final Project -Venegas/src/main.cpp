@@ -269,6 +269,21 @@ public:
         return objCoord;
     }
 };
+void renderImGui() {
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    ImGui::Begin("Player HP");
+    ImGui::Text("HP: %d", player.health);
+
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+    ImGui::ProgressBar((float)player.health / 10.0f);
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
+
+    ImGui::End();
+}
 
 class Enemy : public GameObject {
 public:
