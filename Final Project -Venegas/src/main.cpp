@@ -275,37 +275,21 @@ void BuildScene(float uu, float vv, int subdiv, int scene) {
     }
 }
 
-static void KbdCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    bool moveUp = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
-    bool moveDown = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
-    bool moveLeft = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
-    bool moveRight = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
 
-    if (moveUp && moveLeft) {
-        spherePosY -= moveSpeed / sqrt(2.0f);
-        spherePosX -= moveSpeed / sqrt(2.0f);
-    }
-    else if (moveUp && moveRight) {
-        spherePosY -= moveSpeed / sqrt(2.0f);
-        spherePosX += moveSpeed / sqrt(2.0f);
-    }
-    else if (moveDown && moveLeft) {
-        spherePosY += moveSpeed / sqrt(2.0f);
-        spherePosX -= moveSpeed / sqrt(2.0f);
-    }
-    else if (moveDown && moveRight) {
-        spherePosY += moveSpeed / sqrt(2.0f);
-        spherePosX += moveSpeed / sqrt(2.0f);
-    }
-    else {
-        if (moveUp) spherePosY -= moveSpeed;
-        if (moveDown) spherePosY += moveSpeed;
-        if (moveLeft) spherePosX -= moveSpeed;
-        if (moveRight) spherePosX += moveSpeed;
-    }
+// Function to process input and move the player
+void processInput(GLFWwindow* window, float deltaTime) {
+    float moveSpeed = 5.0f; // Adjust the speed as necessary
+    float moveAmount = moveSpeed * deltaTime;
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        spherePosY -= moveAmount;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        spherePosY += moveAmount;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        spherePosX -= moveAmount;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        spherePosX += moveAmount;
 }
 
 void MouseCallback(GLFWwindow* window, double x, double y) {
@@ -448,7 +432,6 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    glfwSetKeyCallback(window, KbdCallback);
     glfwSetCursorPosCallback(window, MouseCallback);
     glfwSetMouseButtonCallback(window, MouseButtonCallback);;
 
@@ -456,6 +439,8 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     float u = 1, v = 1;
+
+    float lastFrame = 0;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -465,6 +450,11 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        float currentFrame = glfwGetTime();
+		float deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+        processInput(window, deltaTime);
 
         // Actualizar el enemigo
         EnemyIdle();
