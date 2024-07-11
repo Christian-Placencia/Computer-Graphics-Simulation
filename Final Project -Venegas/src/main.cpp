@@ -102,10 +102,27 @@ public:
     virtual ~GameObject() = default;
 };
 
+class Bullet : public GameObject {
+    public:
+    Bullet(glm::vec3 pos, glm::vec3 sz)
+        : GameObject(pos, sz, 1, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0)) {}
+
+    void update(GLfloat dt) override {
+        // Move bullet
+        position += velocity * dt;
+        // Check for collisions and bouncing
+        // (Collision code here)
+    }
+};
+
+std::vector<Bullet> bullets;
+
 class Player : public GameObject {
 public:
     int health = 10;
     float speed = 5.0f;
+    float bulletReloadSpeed = 0.2f;
+    float reloadTimer = 0.0f;
 
     // Player is blue
     Player(glm::vec3 pos, glm::vec3 sz)
@@ -122,6 +139,22 @@ public:
             position.x -= moveAmount;
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)  
             position.x += moveAmount;
+
+        // Shoot bullet on mouse click
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            // Only fire when the reload speed has passed
+            reloadTimer += dt;
+
+            if (reloadTimer >= bulletReloadSpeed) {
+                // Create bullet object and add to vector
+                Bullet newBullet(position, glm::vec3(0.1f, 0.1f, 0.1f));
+                newBullet.velocity = glm::vec3(0, 0, -10.0f);
+                bullets.push_back(newBullet);
+
+                // Reset timer
+                reloadTimer = 0.0f;
+            }
+        }
     }
 };
 
@@ -166,23 +199,12 @@ class FastEnemy : public GameObject {
     }
 };
 
-class Bullet : public GameObject {
-    public:
-    Bullet(glm::vec3 pos, glm::vec3 sz)
-        : GameObject(pos, sz, 1, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0)) {}
 
-    void update(GLfloat dt) override {
-        // Move bullet
-        position += velocity * dt;
-        // Check for collisions and bouncing
-        // (Collision code here)
-    }
-};
 
 // Enemy vector
 std::vector<Enemy> enemies;
 std::vector<FastEnemy> fastEnemies;
-std::vector<Bullet> bullets;
+
 
 // Enemy vector
 glm::vec4 lPos;
@@ -341,23 +363,6 @@ void BuildScene(float uu, float vv, int subdiv, int scene) {
         LoadTexture();
         textureLoaded = true;
     }
-}
-
-
-
-// Function to process input and move the player
-void processInput(GLFWwindow* window, float deltaTime) {
-    float moveSpeed = 5.0f; // Adjust the speed as necessary
-    float moveAmount = moveSpeed * deltaTime;
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        spherePosY -= moveAmount;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        spherePosY += moveAmount;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        spherePosX -= moveAmount;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        spherePosX += moveAmount;
 }
 
 void MouseCallback(GLFWwindow* window, double x, double y) {
@@ -529,13 +534,12 @@ int main()
         currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-        processInput(window, deltaTime);
 
         // Create enemy objects
         SpawnEnemy(glm::vec2(1, 1), 10.0f, EnemyType::NORMAL);
         SpawnEnemy(glm::vec2(-2, -3), 20.0f, EnemyType::FAST);
 
-        // Rendering in the main 
+        // Show and update the player
         playerPos = player.position;
         player.update(deltaTime);
         player.render(proj, view, modelParameter, viewParameter, projParameter, modelViewNParameter, sh, points);
@@ -550,6 +554,12 @@ int main()
         for (int i = 0; i < fastEnemies.size(); i++) {
             fastEnemies[i].update(deltaTime);
             fastEnemies[i].render(proj, view, modelParameter, viewParameter, projParameter, modelViewNParameter, sh, points);
+        }
+
+        // Render and update bullets in bullet vector
+        for (int i = 0; i < bullets.size(); i++) {
+            bullets[i].update(deltaTime);
+            bullets[i].render(proj, view, modelParameter, viewParameter, projParameter, modelViewNParameter, sh, points);
         }
 
         ImGui::Render();
