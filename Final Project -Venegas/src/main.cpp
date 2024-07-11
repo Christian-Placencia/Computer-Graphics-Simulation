@@ -148,14 +148,14 @@ public:
     void update() override {
         position += velocity * deltaTime;
         collider.position = position;
-        handleWallCollision();
+        //handleWallCollision();
     }
 
     void handleWallCollision() {
-        if (position.x <= -4.5f || position.x >= 4.5f) {
+        if (position.x <= -4.0f || position.x >= 4.0f) {
             velocity.x = -velocity.x;
         }
-        if (position.z <= -5.0f || position.z >= 5.0f) {
+        if (position.z <= -4.5f || position.z >= 4.5f) {
             velocity.z = -velocity.z;
         }
     }
@@ -168,13 +168,13 @@ public:
     int health = 10;
     float speed = 5.0f;
     float bulletReloadSpeed = 0.2f;
-    bool canShoot = false;
+    float reloadTimer = 0.0f;
 
     Player(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
         : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 0.2), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0)) {}
 
     void update() override {
-        GameObject::update();
+        // GameObject::update();
 
         float moveAmount = speed * deltaTime;
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -186,19 +186,30 @@ public:
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             position.x += moveAmount;
 
-        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-            canShoot = true;
-        }
+        reloadTimer += deltaTime;
 
-        if (canShoot && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            glm::vec3 mouseWorldPos = getMouseWorldPosition();
-            glm::vec3 direction = glm::normalize(mouseWorldPos - position);
-            Bullet newBullet(position, glm::vec3(0.1f, 0.1f, 0.1f), 0.05f);
-            newBullet.velocity = direction * 10.0f;
-            bullets.push_back(newBullet);
+        // Shoot bullet on mouse click
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            // Only fire when the reload speed has passed
+            if (reloadTimer >= bulletReloadSpeed) {
+                // Create bullet object and add to vector
+                glm::vec3 mouseWorldPos = getMouseWorldPosition();
+                glm::vec3 direction = mouseWorldPos - position;
+                direction = glm::normalize(direction);
 
-            std::cout << "Bullet created at position: " << position.x << ", " << position.y << ", " << position.z << std::endl;
-            std::cout << "Bullet velocity: " << newBullet.velocity.x << ", " << newBullet.velocity.y << ", " << newBullet.velocity.z << std::endl;
+				std::cout << "Normal direction: " << direction.x << ", " << direction.y << ", " << direction.z << std::endl;    
+
+                Bullet newBullet(position, glm::vec3(0.1f, 0.1f, 0.1f), 0.05f);
+                newBullet.velocity = direction * 10.0f;
+                bullets.push_back(newBullet);
+
+                // Debug
+                std::cout << "Bullet created at position: " << position.x << ", " << position.y << ", " << position.z << std::endl;
+                std::cout << "Bullet velocity: " << newBullet.velocity.x << ", " << newBullet.velocity.y << ", " << newBullet.velocity.z << std::endl;
+
+                // Reset timer
+                reloadTimer = 0.0f;
+            }
         }
     }
 
@@ -716,9 +727,9 @@ int main()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        for (int i = 0; i < walls.size(); i++) {
-            walls[i].render();
-        }
+        // for (int i = 0; i < walls.size(); i++) {
+        //     walls[i].render();
+        // }
 
         currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
