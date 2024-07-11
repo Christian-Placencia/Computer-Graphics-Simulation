@@ -82,6 +82,20 @@ enum class EnemyType {
     FAST
 };
 
+// Clase Collider para manejar colisiones
+class Collider {
+public:
+    glm::vec3 position;
+    float radius;
+
+    Collider(glm::vec3 pos, float r) : position(pos), radius(r) {}
+
+    bool checkCollision(const Collider& other) {
+        float distance = glm::distance(position, other.position);
+        return distance < (radius + other.radius);
+    }
+};
+
 // Function prototypes
 void CreateRectPrism(vector<GLfloat>* a, float width, float height, float depth, float u, float v, int n);
 void LoadTexture();
@@ -93,11 +107,15 @@ public:
     float rotation;
     GLuint texture;
     glm::vec3 ambientColor, diffuseColor, specularColor;
+    Collider collider;
 
-    GameObject(glm::vec3 pos, glm::vec3 sz, GLuint tex, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
-        : position(pos), size(sz), texture(tex), ambientColor(ambient), diffuseColor(diffuse), specularColor(specular), velocity(0.0f), rotation(0.0f) {}
+    GameObject(glm::vec3 pos, glm::vec3 sz, float colliderRadius, GLuint tex, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
+        : position(pos), size(sz), texture(tex), ambientColor(ambient), diffuseColor(diffuse), specularColor(specular),
+        velocity(0.0f), rotation(0.0f), collider(pos, colliderRadius) {}
 
-    virtual void update() = 0;
+    virtual void update() {
+        collider.position = position;
+    }
 
     virtual void render() {
         glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
@@ -123,15 +141,23 @@ public:
 };
 
 class Bullet : public GameObject {
-    public:
-    Bullet(glm::vec3 pos, glm::vec3 sz)
-        : GameObject(pos, sz, 1, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0)) {}
+public:
+    Bullet(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
+        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0)) {}
 
     void update() override {
-        // Move bullet
         position += velocity * deltaTime;
-        // Check for collisions and bouncing
-        // (Collision code here)
+        collider.position = position;
+        handleWallCollision();
+    }
+
+    void handleWallCollision() {
+        if (position.x <= -4.5f || position.x >= 4.5f) {
+            velocity.x = -velocity.x;
+        }
+        if (position.z <= -5.0f || position.z >= 5.0f) {
+            velocity.z = -velocity.z;
+        }
     }
 };
 
@@ -142,14 +168,14 @@ public:
     int health = 10;
     float speed = 5.0f;
     float bulletReloadSpeed = 0.2f;
-    float reloadTimer = 0.0f;
+    bool canShoot = false;
 
-    // Player is blue
-    Player(glm::vec3 pos, glm::vec3 sz)
-        : GameObject(pos, sz, 1, glm::vec3(0, 0, 0.2), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0)){}
+    Player(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
+        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 0.2), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0)) {}
 
     void update() override {
-        // Update player position based on input
+        GameObject::update();
+
         float moveAmount = speed * deltaTime;
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             position.z -= moveAmount;
@@ -157,76 +183,104 @@ public:
             position.z += moveAmount;
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
             position.x -= moveAmount;
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)  
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             position.x += moveAmount;
 
-        // Shoot bullet on mouse click
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            // Only fire when the reload speed has passed
-            reloadTimer += deltaTime;
-
-            if (reloadTimer >= bulletReloadSpeed) {
-                // Create bullet object and add to vector
-                Bullet newBullet(position, glm::vec3(0.1f, 0.1f, 0.1f));
-                newBullet.velocity = glm::vec3(0, 0, -10.0f);
-                bullets.push_back(newBullet);
-
-                // Reset timer
-                reloadTimer = 0.0f;
-            }
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+            canShoot = true;
         }
+
+        if (canShoot && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            glm::vec3 mouseWorldPos = getMouseWorldPosition();
+            glm::vec3 direction = glm::normalize(mouseWorldPos - position);
+            Bullet newBullet(position, glm::vec3(0.1f, 0.1f, 0.1f), 0.05f);
+            newBullet.velocity = direction * 10.0f;
+            bullets.push_back(newBullet);
+
+            std::cout << "Bullet created at position: " << position.x << ", " << position.y << ", " << position.z << std::endl;
+            std::cout << "Bullet velocity: " << newBullet.velocity.x << ", " << newBullet.velocity.y << ", " << newBullet.velocity.z << std::endl;
+        }
+    }
+
+    glm::vec3 getMouseWorldPosition() {
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+
+        glm::vec4 viewport = glm::vec4(0.0f, 0.0f, 1920.0f, 1080.0f);
+        glm::vec3 winCoord = glm::vec3(x, 1080.0f - y, 0.0f);
+
+        glm::vec3 objCoord = glm::unProject(winCoord, view, proj, viewport);
+        return objCoord;
     }
 };
 
-
 class Enemy : public GameObject {
-    public:
+public:
     int health = 2;
     float speed = 3.0f;
 
     // Normal enemy is green
-    Enemy(glm::vec3 pos, glm::vec3 sz)
-        : GameObject(pos, sz, 1, glm::vec3(0,0.2,0), glm::vec3(0,1,0), glm::vec3(1,1,0)){}
+    Enemy(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
+        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0.2, 0), glm::vec3(0, 1, 0), glm::vec3(1, 1, 0)) {}
 
     void update() override {
-        // Update enemy position based on AI or other logic
+        GameObject::update();
         glm::vec3 direction = playerPos - position;
         float length = glm::length(direction);
         if (length != 0) {
             direction /= length;
         }
         position += direction * speed * deltaTime;
+        handleWallCollision();
+    }
+
+    void handleWallCollision() {
+        if (position.x <= -4.5f || position.x >= 4.5f) {
+            velocity.x = -velocity.x;
+        }
+        if (position.z <= -5.0f || position.z >= 5.0f) {
+            velocity.z = -velocity.z;
+        }
     }
 };
 
 class FastEnemy : public GameObject {
-    public:
+public:
     int health = 3;
     float speed = 5.0f;
 
     // Fast enemy is red
-    FastEnemy(glm::vec3 pos, glm::vec3 sz)
-        : GameObject(pos, sz, 1, glm::vec3(0.2, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 1, 0)){}
+    FastEnemy(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
+        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0.2, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 1, 0)) {}
 
     void update() override {
-        // Update enemy position based on AI or other logic
+        GameObject::update();
         glm::vec3 direction = playerPos - position;
         float length = glm::length(direction);
         if (length != 0) {
             direction /= length;
         }
         position += direction * speed * deltaTime;
+        handleWallCollision();
+    }
+
+    void handleWallCollision() {
+        if (position.x <= -4.5f || position.x >= 4.5f) {
+            velocity.x = -velocity.x;
+        }
+        if (position.z <= -5.0f || position.z >= 5.0f) {
+            velocity.z = -velocity.z;
+        }
     }
 };
 
-// Enemy vector
 std::vector<Enemy> enemies;
 std::vector<FastEnemy> fastEnemies;
 
 class Wall : public GameObject {
-    public:
+public:
     Wall(glm::vec3 pos, glm::vec3 sz)
-        : GameObject(pos, sz, 1, glm::vec3(1, 1, 1), glm::vec3(1, 1, 1), glm::vec3(1, 1, 1)){}
+        : GameObject(pos, sz, 1.0f, 1, glm::vec3(1, 1, 1), glm::vec3(1, 1, 1), glm::vec3(1, 1, 1)) {}
 
     void update() override {
         // Walls are static
@@ -263,7 +317,6 @@ class Wall : public GameObject {
 };
 
 vector<Wall> walls;
-
 
 void LoadTexture()
 {
@@ -431,20 +484,13 @@ void CreateRectPrism(vector<GLfloat>* a, float width, float height, float depth,
     glm::vec3 normalTop = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 normalBottom = glm::vec3(0.0f, -1.0f, 0.0f);
 
-    // Front face
     AddFace(a, p0, p1, p5, p4, normalFront, u, v, n);
-    // Back face
     AddFace(a, p2, p3, p7, p6, normalBack, u, v, n);
-    // Left face
     AddFace(a, p3, p0, p4, p7, normalLeft, u, v, n);
-    // Right face
     AddFace(a, p1, p2, p6, p5, normalRight, u, v, n);
-    // Top face
     AddFace(a, p3, p2, p6, p7, normalTop, u, v, n);
-    // Bottom face
     AddFace(a, p0, p1, p5, p4, normalBottom, u, v, n);
 }
-
 
 // Build the scene
 void BuildScene(float uu, float vv, int subdiv, int scene) {
@@ -522,26 +568,81 @@ void SpawnEnemy(glm::vec2 position, float spawnInterval, EnemyType type = EnemyT
     static float spawnTimer = 0.0f;
     spawnTimer += deltaTime;
 
-    // Check if it's time to spawn a new enemy
     if (spawnTimer >= spawnInterval) {
-        // Create enemy object and add to vector
-        if (type == EnemyType::NORMAL)
-        {
-            Enemy newEnemy(glm::vec3(position.x, 0, position.y), glm::vec3(0.4f, 0.4f, 0.4f));
+        if (type == EnemyType::NORMAL) {
+            Enemy newEnemy(glm::vec3(position.x, 0, position.y), glm::vec3(0.4f, 0.4f, 0.4f), 0.2f);
             enemies.push_back(newEnemy);
         }
-            
-        else if (type == EnemyType::FAST)
-        {
-            FastEnemy newEnemy(glm::vec3(position.x, 0, position.y), glm::vec3(0.4f, 0.4f, 0.4f));
+        else if (type == EnemyType::FAST) {
+            FastEnemy newEnemy(glm::vec3(position.x, 0, position.y), glm::vec3(0.4f, 0.4f, 0.4f), 0.2f);
             fastEnemies.push_back(newEnemy);
         }
-
-        // Reset timer
         spawnTimer = 0.0f;
     }
 }
 
+void CheckCollisions(Player& player) {
+    for (auto& enemy : enemies) {
+        if (player.collider.checkCollision(enemy.collider)) {
+            player.health--;
+            enemy.health = 0;
+        }
+    }
+
+    for (auto& fastEnemy : fastEnemies) {
+        if (player.collider.checkCollision(fastEnemy.collider)) {
+            player.health--;
+            fastEnemy.health = 0;
+        }
+    }
+
+    for (auto& bullet : bullets) {
+        bullet.handleWallCollision();
+
+        for (auto& enemy : enemies) {
+            if (bullet.collider.checkCollision(enemy.collider)) {
+                enemy.health = 0;
+                bullet.collider.radius = 0;
+            }
+        }
+
+        for (auto& fastEnemy : fastEnemies) {
+            if (bullet.collider.checkCollision(fastEnemy.collider)) {
+                fastEnemy.health = 0;
+                bullet.collider.radius = 0;
+            }
+        }
+
+        if (bullet.collider.checkCollision(player.collider)) {
+            player.health--;
+            bullet.collider.radius = 0;
+        }
+    }
+
+    for (size_t i = 0; i < enemies.size(); ++i) {
+        for (size_t j = i + 1; j < enemies.size(); ++j) {
+            if (enemies[i].collider.checkCollision(enemies[j].collider)) {
+                glm::vec3 direction = glm::normalize(enemies[j].position - enemies[i].position);
+                enemies[i].velocity = -direction * enemies[i].speed;
+                enemies[j].velocity = direction * enemies[j].speed;
+            }
+        }
+    }
+
+    for (size_t i = 0; i < fastEnemies.size(); ++i) {
+        for (size_t j = i + 1; j < fastEnemies.size(); ++j) {
+            if (fastEnemies[i].collider.checkCollision(fastEnemies[j].collider)) {
+                glm::vec3 direction = glm::normalize(fastEnemies[j].position - fastEnemies[i].position);
+                fastEnemies[i].velocity = -direction * fastEnemies[i].speed;
+                fastEnemies[j].velocity = direction * fastEnemies[j].speed;
+            }
+        }
+    }
+
+    enemies.erase(remove_if(enemies.begin(), enemies.end(), [](Enemy& e) { return e.health <= 0; }), enemies.end());
+    fastEnemies.erase(remove_if(fastEnemies.end(), fastEnemies.end(), [](FastEnemy& e) { return e.health <= 0; }), fastEnemies.end());
+    bullets.erase(remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return b.collider.radius == 0; }), bullets.end());
+}
 
 int main()
 {
@@ -594,8 +695,7 @@ int main()
     float u = 1, v = 1;
 
     float lastFrame = 0;
-    
-    // Create level walls
+
     Wall wall1(glm::vec3(-4.5, 0, -4.5), glm::vec3(1.0f, 5.0f, 10.0f));
     Wall wall2(glm::vec3(-4.5, 0, -4.5), glm::vec3(10.0f, 5.0f, 1.0f));
     Wall wall3(glm::vec3(-4.5, 0, 4.5), glm::vec3(10.0f, 5.0f, 1.0f));
@@ -606,8 +706,7 @@ int main()
     walls.push_back(wall3);
     walls.push_back(wall4);
 
-    // Create player object
-    Player player(glm::vec3(0, 0, 0), glm::vec3(0.4f, 0.4f, 0.4f));
+    Player player(glm::vec3(0, 0, 0), glm::vec3(0.4f, 0.4f, 0.4f), 0.2f);
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -617,18 +716,14 @@ int main()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Render walls
-        // ! Rendering walls makes EVERYTHING a wall
-        // for (int i = 0; i < walls.size(); i++) {
-        //     walls[i].render();
-        // }
+        for (int i = 0; i < walls.size(); i++) {
+            walls[i].render();
+        }
 
-        // Time flow
         currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
-        // Create enemy objects
         SpawnEnemy(glm::vec2(1, 1), 10.0f, EnemyType::NORMAL);
         SpawnEnemy(glm::vec2(-2, -3), 20.0f, EnemyType::FAST);
 
@@ -636,41 +731,35 @@ int main()
         glm::vec3 lightColor(1, 1, 0);
 
         glUniform4fv(lPosParameter, 1, glm::value_ptr(lPos));
-        glUniform3fv(laParameter, 1, glm::value_ptr(lightColor * 1.0f));  // Ambient light
-        glUniform3fv(ldParameter, 1, glm::value_ptr(lightColor * 1.0f));  // Diffuse light
+        glUniform3fv(laParameter, 1, glm::value_ptr(lightColor * 1.0f));
+        glUniform3fv(ldParameter, 1, glm::value_ptr(lightColor * 1.0f));
         glUniform3fv(lsParameter, 1, glm::value_ptr(lightColor * 1.0f));
 
-        // Show and update the player
         playerPos = player.position;
         player.update();
         player.render();
 
-        // Render and update enemies in enemy vector
         for (int i = 0; i < enemies.size(); i++) {
             enemies[i].update();
             enemies[i].render();
         }
 
-        // Render and update enemies in fast enemy vector
         for (int i = 0; i < fastEnemies.size(); i++) {
             fastEnemies[i].update();
             fastEnemies[i].render();
         }
 
-        // Render and update bullets in bullet vector
         for (int i = 0; i < bullets.size(); i++) {
             bullets[i].update();
             bullets[i].render();
         }
 
+        CheckCollisions(player);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
         glfwPollEvents();
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
     }
 
     glDeleteProgram(shaderProg);
