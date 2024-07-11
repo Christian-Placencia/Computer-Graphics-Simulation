@@ -218,6 +218,12 @@ class FastEnemy : public GameObject {
 std::vector<Enemy> enemies;
 std::vector<FastEnemy> fastEnemies;
 
+class Wall : public GameObject {
+    public:
+    Wall(glm::vec3 pos, glm::vec3 sz)
+        : GameObject(pos, sz, 1, glm::vec3(1, 1, 1), glm::vec3(1, 1, 1), glm::vec3(1, 1, 1)){}
+};
+
 
 void LoadTexture()
 {
@@ -324,6 +330,81 @@ void CreateRevo(vector<GLfloat>* a, float u, float v, int n, int scene)
         }
     }
 }
+
+// Function to add a face of the rectangular prism
+void AddFace(vector<GLfloat>* a, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 normal, float u, float v, int n) {
+    GLfloat step = 1.f / n;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            glm::vec2 uv0 = glm::vec2((GLfloat)i * u / n, (GLfloat)j * v / n);
+            glm::vec2 uv1 = glm::vec2((GLfloat)(i + 1) * u / n, (GLfloat)j * v / n);
+            glm::vec2 uv2 = glm::vec2((GLfloat)(i + 1) * u / n, (GLfloat)(j + 1) * v / n);
+            glm::vec2 uv3 = glm::vec2((GLfloat)i * u / n, (GLfloat)(j + 1) * v / n);
+
+            glm::vec3 p0 = v0 + (v1 - v0) * (i * step) + (v3 - v0) * (j * step);
+            glm::vec3 p1 = v0 + (v1 - v0) * ((i + 1) * step) + (v3 - v0) * (j * step);
+            glm::vec3 p2 = v0 + (v1 - v0) * ((i + 1) * step) + (v3 - v0) * ((j + 1) * step);
+            glm::vec3 p3 = v0 + (v1 - v0) * (i * step) + (v3 - v0) * ((j + 1) * step);
+
+            AddVertex(a, p0);
+            AddVertex(a, normal);
+            AddUV(a, uv0);
+
+            AddVertex(a, p1);
+            AddVertex(a, normal);
+            AddUV(a, uv1);
+
+            AddVertex(a, p2);
+            AddVertex(a, normal);
+            AddUV(a, uv2);
+
+            AddVertex(a, p0);
+            AddVertex(a, normal);
+            AddUV(a, uv0);
+
+            AddVertex(a, p2);
+            AddVertex(a, normal);
+            AddUV(a, uv2);
+
+            AddVertex(a, p3);
+            AddVertex(a, normal);
+            AddUV(a, uv3);
+        }
+    }
+}
+
+// Create rectangular prism
+void CreateRectPrism(vector<GLfloat>* a, float width, float height, float depth, float u, float v, int n) {
+    glm::vec3 p0 = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 p1 = glm::vec3(width, 0.0f, 0.0f);
+    glm::vec3 p2 = glm::vec3(width, height, 0.0f);
+    glm::vec3 p3 = glm::vec3(0.0f, height, 0.0f);
+    glm::vec3 p4 = glm::vec3(0.0f, 0.0f, depth);
+    glm::vec3 p5 = glm::vec3(width, 0.0f, depth);
+    glm::vec3 p6 = glm::vec3(width, height, depth);
+    glm::vec3 p7 = glm::vec3(0.0f, height, depth);
+
+    glm::vec3 normalFront = glm::vec3(0.0f, 0.0f, 1.0f);
+    glm::vec3 normalBack = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 normalLeft = glm::vec3(-1.0f, 0.0f, 0.0f);
+    glm::vec3 normalRight = glm::vec3(1.0f, 0.0f, 0.0f);
+    glm::vec3 normalTop = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 normalBottom = glm::vec3(0.0f, -1.0f, 0.0f);
+
+    // Front face
+    AddFace(a, p0, p1, p5, p4, normalFront, u, v, n);
+    // Back face
+    AddFace(a, p2, p3, p7, p6, normalBack, u, v, n);
+    // Left face
+    AddFace(a, p3, p0, p4, p7, normalLeft, u, v, n);
+    // Right face
+    AddFace(a, p1, p2, p6, p5, normalRight, u, v, n);
+    // Top face
+    AddFace(a, p3, p2, p6, p7, normalTop, u, v, n);
+    // Bottom face
+    AddFace(a, p0, p1, p5, p4, normalBottom, u, v, n);
+}
+
 
 // Build the scene
 void BuildScene(float uu, float vv, int subdiv, int scene) {
