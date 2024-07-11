@@ -44,17 +44,32 @@ GLint viewParameter;
 GLint projParameter;
 GLint modelViewNParameter;
 
-// Materials and lights
+// Materials and lights parameters
 GLint kaParameter, kdParameter, ksParameter, shParameter;
 GLint laParameter, ldParameter, lsParameter, lPosParameter;
 
 // Light properties
 float sh = 100;
+glm::vec4 lPos;
 
 // Camera settings
 GLFWwindow* window;
 glm::mat4 proj = glm::ortho(-4.5f, 4.5f, -5.0f, 5.0f, 0.01f, 1000.0f);
 glm::mat4 view = glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0, 0, 0), glm::vec3(0, 0, -1));
+
+// Screen settings
+GLint points = 0;
+GLdouble mouseX, mouseY;
+bool showMenu = true;
+
+// Texture settings
+int texAs;
+GLint texAsParameter;
+static bool textureLoaded = false;
+
+// Render settings
+int subdivision = 10;
+GLuint VAO, VBO;
 
 // Global variables
 glm::vec3 playerPos(0.0f, 0.0f, 0.0f);
@@ -77,9 +92,9 @@ public:
     GameObject(glm::vec3 pos, glm::vec3 sz, GLuint tex, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
         : position(pos), size(sz), texture(tex), ambientColor(ambient), diffuseColor(diffuse), specularColor(specular), velocity(0.0f), rotation(0.0f) {}
 
-    virtual void update(GLfloat dt) = 0;
+    virtual void update() = 0;
 
-    virtual void render(const glm::mat4& proj, const glm::mat4& view, GLuint modelParameter, GLuint viewParameter, GLuint projParameter, GLuint modelViewNParameter, GLfloat sh, GLint points) {
+    virtual void render() {
         glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
         model = glm::scale(model, size);
         glm::mat4 modelView = proj * view * model;
@@ -107,9 +122,9 @@ class Bullet : public GameObject {
     Bullet(glm::vec3 pos, glm::vec3 sz)
         : GameObject(pos, sz, 1, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0)) {}
 
-    void update(GLfloat dt) override {
+    void update() override {
         // Move bullet
-        position += velocity * dt;
+        position += velocity * deltaTime;
         // Check for collisions and bouncing
         // (Collision code here)
     }
@@ -128,9 +143,9 @@ public:
     Player(glm::vec3 pos, glm::vec3 sz)
         : GameObject(pos, sz, 1, glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0)){}
 
-    void update(GLfloat dt) override {
+    void update() override {
         // Update player position based on input
-        float moveAmount = speed * dt;
+        float moveAmount = speed * deltaTime;
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             position.z -= moveAmount;
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -143,7 +158,7 @@ public:
         // Shoot bullet on mouse click
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             // Only fire when the reload speed has passed
-            reloadTimer += dt;
+            reloadTimer += deltaTime;
 
             if (reloadTimer >= bulletReloadSpeed) {
                 // Create bullet object and add to vector
@@ -168,14 +183,14 @@ class Enemy : public GameObject {
     Enemy(glm::vec3 pos, glm::vec3 sz)
         : GameObject(pos, sz, 1, glm::vec3(1,1,1), glm::vec3(1,1,1), glm::vec3(1,1,1)){}
 
-    void update(GLfloat dt) override {
+    void update() override {
         // Update enemy position based on AI or other logic
         glm::vec3 direction = playerPos - position;
         float length = glm::length(direction);
         if (length != 0) {
             direction /= length;
         }
-        position += direction * speed * dt;
+        position += direction * speed * deltaTime;
     }
 };
 
@@ -188,55 +203,21 @@ class FastEnemy : public GameObject {
     FastEnemy(glm::vec3 pos, glm::vec3 sz)
         : GameObject(pos, sz, 1, glm::vec3(1, 1, 0), glm::vec3(1, 1, 0), glm::vec3(1, 1, 0)){}
 
-    void update(GLfloat dt) override {
+    void update() override {
         // Update enemy position based on AI or other logic
         glm::vec3 direction = playerPos - position;
         float length = glm::length(direction);
         if (length != 0) {
             direction /= length;
         }
-        position += direction * speed * dt;
+        position += direction * speed * deltaTime;
     }
 };
-
-
 
 // Enemy vector
 std::vector<Enemy> enemies;
 std::vector<FastEnemy> fastEnemies;
 
-
-// Enemy vector
-glm::vec4 lPos;
-float ltime = 0;
-float timeDelta = 0;
-
-int texAs;
-GLint texAsParameter;
-
-GLint points = 0;
-GLdouble mouseX, mouseY;
-
-int subdivision = 10;
-int wrapu, wrapv;
-int minFilter = 0, maxFilter = 0;
-
-float spherePosX = 0.0f;
-float spherePosY = 0.0f;
-float moveSpeed = 0.07f;  // Incrementar la velocidad de movimiento
-
-float enemyPosX = 10.0f;  
-float enemyPosY = 10.0f;
-float enemySpeed = 0.0006f;
-
-float enemyFastPosX = -10.0f;  
-float enemyFastPosY = 10.0f;
-float enemyFastSpeed = 0.0009f;
-
-GLuint VAO, VBO;
-static bool textureLoaded = false;
-
-bool showMenu = true;
 
 void LoadTexture()
 {
@@ -266,11 +247,13 @@ void LoadTexture()
     stbi_image_free(data);
 }
 
+// Parametric equations for the surface
 GLfloat P2(GLfloat u)
 {
     return 0.5f * sin(M_PI * u);
 }
 
+// Add vertex and normal to the vector
 inline void AddVertex(vector<GLfloat>* a, glm::vec3 A)
 {
     a->push_back(A[0]);
@@ -278,12 +261,14 @@ inline void AddVertex(vector<GLfloat>* a, glm::vec3 A)
     a->push_back(A[2]);
 }
 
+// Add UV to the vector
 inline void AddUV(vector<GLfloat>* a, glm::vec2 A)
 {
     a->push_back(A[0]);
     a->push_back(A[1]);
 }
 
+// Surface equation
 inline glm::vec3 S(GLfloat u, GLfloat v, int scene)
 {
     glm::vec3 ret;
@@ -293,6 +278,7 @@ inline glm::vec3 S(GLfloat u, GLfloat v, int scene)
     return ret;
 }
 
+// Normal equation
 inline glm::vec3 Snormal(GLfloat u, GLfloat v, int scene)
 {
     float du = 0.05f;
@@ -304,6 +290,7 @@ inline glm::vec3 Snormal(GLfloat u, GLfloat v, int scene)
     return glm::normalize(glm::cross(sdu, sdv));
 }
 
+// Create revolution surface
 void CreateRevo(vector<GLfloat>* a, float u, float v, int n, int scene)
 {
     GLfloat step = 1.f / n;
@@ -338,6 +325,7 @@ void CreateRevo(vector<GLfloat>* a, float u, float v, int n, int scene)
     }
 }
 
+// Build the scene
 void BuildScene(float uu, float vv, int subdiv, int scene) {
     vector<GLfloat> v;
     CreateRevo(&v, uu, vv, subdiv, scene);
@@ -365,6 +353,7 @@ void BuildScene(float uu, float vv, int subdiv, int scene) {
     }
 }
 
+// Mouse and keyboard callback
 void MouseCallback(GLFWwindow* window, double x, double y) {
     ImGuiIO& io = ImGui::GetIO();
     io.AddMousePosEvent(x, y);
@@ -375,43 +364,6 @@ void MouseCallback(GLFWwindow* window, double x, double y) {
     if (mouseLeft)  trackball.Rotate(mouseX, mouseY);
     if (mouseMid)   trackball.Translate(mouseX, mouseY);
     if (mouseRight) trackball.Zoom(mouseX, mouseY);
-}
-
-void MouseButtonCallback(GLFWwindow* window, int button, int state, int mods) {
-    ImGuiIO& io = ImGui::GetIO();
-    io.AddMouseButtonEvent(button, state);
-    if (io.WantCaptureMouse) return;
-
-    if (button == GLFW_MOUSE_BUTTON_LEFT && state == GLFW_PRESS)
-    {
-        trackball.Set(window, true, mouseX, mouseY);
-        mouseLeft = true;
-    }
-    if (button == GLFW_MOUSE_BUTTON_LEFT && state == GLFW_RELEASE)
-    {
-        trackball.Set(window, false, mouseX, mouseY);
-        mouseLeft = false;
-    }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && state == GLFW_PRESS)
-    {
-        trackball.Set(window, true, mouseX, mouseY);
-        mouseMid = true;
-    }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && state == GLFW_RELEASE)
-    {
-        trackball.Set(window, true, mouseX, mouseY);
-        mouseMid = false;
-    }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && state == GLFW_PRESS)
-    {
-        trackball.Set(window, true, mouseX, mouseY);
-        mouseRight = true;
-    }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && state == GLFW_RELEASE)
-    {
-        trackball.Set(window, true, mouseX, mouseY);
-        mouseRight = false;
-    }
 }
 
 void InitShaders(GLuint* program)
@@ -510,7 +462,6 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
 
     glfwSetCursorPosCallback(window, MouseCallback);
-    glfwSetMouseButtonCallback(window, MouseButtonCallback);;
 
     glClearDepth(100000.0);
     glEnable(GL_DEPTH_TEST);
@@ -541,25 +492,25 @@ int main()
 
         // Show and update the player
         playerPos = player.position;
-        player.update(deltaTime);
-        player.render(proj, view, modelParameter, viewParameter, projParameter, modelViewNParameter, sh, points);
+        player.update();
+        player.render();
 
         // Render and update enemies in enemy vector
         for (int i = 0; i < enemies.size(); i++) {
-            enemies[i].update(deltaTime);
-            enemies[i].render(proj, view, modelParameter, viewParameter, projParameter, modelViewNParameter, sh, points);
+            enemies[i].update();
+            enemies[i].render();
         }
 
         // Render and update enemies in fast enemy vector
         for (int i = 0; i < fastEnemies.size(); i++) {
-            fastEnemies[i].update(deltaTime);
-            fastEnemies[i].render(proj, view, modelParameter, viewParameter, projParameter, modelViewNParameter, sh, points);
+            fastEnemies[i].update();
+            fastEnemies[i].render();
         }
 
         // Render and update bullets in bullet vector
         for (int i = 0; i < bullets.size(); i++) {
-            bullets[i].update(deltaTime);
-            bullets[i].render(proj, view, modelParameter, viewParameter, projParameter, modelViewNParameter, sh, points);
+            bullets[i].update();
+            bullets[i].render();
         }
 
         ImGui::Render();
