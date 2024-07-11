@@ -48,6 +48,59 @@ GLint modelViewNParameter;
 GLint kaParameter, kdParameter, ksParameter, shParameter;
 GLint laParameter, ldParameter, lsParameter, lPosParameter;
 
+// GameObjects
+class GameObject {
+    public:
+    glm::vec3 position, size, velocity;
+    float rotation;
+    GLuint texture;
+
+    GameObject(glm::vec3 pos, glm::vec3 sz, GLuint tex) : position(pos), size(sz), texture(tex), velocity(0.0f), rotation(0.0f) {}
+
+    virtual void update(GLfloat timeDelta) = 0;
+    void render()
+    {
+
+    }
+};
+
+class Player : public GameObject {
+    public:
+    int health;
+
+    Player(glm::vec3 pos, glm::vec3 sz, GLuint tex, int hp) : GameObject(pos, sz, tex), health(hp) {}
+
+    void update(GLfloat dt) override {
+        // Update player position based on input
+    }
+};
+
+class Enemy : public GameObject {
+    public:
+    int health;
+
+    Enemy(glm::vec3 pos, glm::vec3 sz, GLuint tex, int hp) : GameObject(pos, sz, tex), health(hp) {}
+
+    void update(GLfloat dt) override {
+        // Update player position based on input
+    }
+};
+
+class Bullet : public GameObject {
+    public:
+    Bullet(glm::vec3 pos, glm::vec3 sz, GLuint tex) : GameObject(pos, sz, tex) {}
+
+    void update(GLfloat dt) override {
+        // Move bullet
+        position += velocity * dt;
+        // Check for collisions and bouncing
+        // (Collision code here)
+    }
+};
+
+
+
+
 float ksColor[3] = { 1, 1, 0 };
 float kaColor[3] = { 0, 0, 0 };
 float kdColor[3] = { 0, 0, 1 };
@@ -460,7 +513,7 @@ int main()
         // Renderizar el jugador
         glBindVertexArray(VAO);
         glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(spherePosX, 0.0f, spherePosY));
-        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));  // Ajustar el tamaño de la esfera
+        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));  // Ajustar el tamaï¿½o de la esfera
         glm::mat4 modelView = proj * view * model;
         glm::mat3 modelViewN = glm::mat3(view * model);
         modelViewN = glm::transpose(glm::inverse(modelViewN));
@@ -492,7 +545,7 @@ int main()
 
         // Renderizar el primer enemigo
         glm::mat4 modelEnemy = glm::translate(glm::mat4(1.0f), glm::vec3(enemyPosX, 0.0f, enemyPosY));
-        modelEnemy = glm::scale(modelEnemy, glm::vec3(0.4f, 0.4f, 0.4f));  // Ajustar el tamaño de la esfera
+        modelEnemy = glm::scale(modelEnemy, glm::vec3(0.4f, 0.4f, 0.4f));  // Ajustar el tamaï¿½o de la esfera
         glm::mat4 modelViewEnemy = proj * view * modelEnemy;
         glm::mat3 modelViewNEnemy = glm::mat3(view * modelEnemy);
         modelViewNEnemy = glm::transpose(glm::inverse(modelViewNEnemy));
@@ -511,7 +564,7 @@ int main()
 
         // Render fast enemy
         glm::mat4 modelEnemyFast = glm::translate(glm::mat4(1.0f), glm::vec3(enemyFastPosX, 0.0f, enemyFastPosY));
-        modelEnemyFast = glm::scale(modelEnemyFast, glm::vec3(0.4f, 0.4f, 0.4f));  // Ajustar el tamaño del enemigo rápido
+        modelEnemyFast = glm::scale(modelEnemyFast, glm::vec3(0.4f, 0.4f, 0.4f));  // Ajustar el tamaï¿½o del enemigo rï¿½pido
         glm::mat4 modelViewEnemyFast = proj * view * modelEnemyFast;
         glm::mat3 modelViewNEnemyFast = glm::mat3(view * modelEnemyFast);
         modelViewNEnemyFast = glm::transpose(glm::inverse(modelViewNEnemyFast));
