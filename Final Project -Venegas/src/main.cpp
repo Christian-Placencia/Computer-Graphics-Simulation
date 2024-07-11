@@ -465,44 +465,6 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        if (showMenu) {
-            ImGui::Begin("Texturing");
-            if (ImGui::SliderFloat("u", &u, 0.1, 10.0, "%f", 0)) {
-                BuildScene(u, v, subdivision, scene);
-            }
-            if (ImGui::SliderFloat("v", &v, 0.1, 10.0, "%f", 0)) {
-                BuildScene(u, v, subdivision, scene);
-            }
-            if (ImGui::SliderInt("Subdivision", &subdivision, 1, 100, "%i", 0)) {
-                BuildScene(u, v, subdivision, scene);
-            }
-
-            if (ImGui::RadioButton("Sphere", &scene, 1)) {
-                BuildScene(u, v, subdivision, scene);
-            }
-
-            ImGui::RadioButton("No tex", &texAs, 0); ImGui::SameLine();
-            ImGui::RadioButton("Tex as Color", &texAs, 1); ImGui::SameLine();
-            ImGui::RadioButton("Tex as diffuse", &texAs, 2); ImGui::SameLine();
-            ImGui::RadioButton("Tex as specular", &texAs, 3); ImGui::SameLine();
-            ImGui::RadioButton("Tex as ambient", &texAs, 4);
-
-            if (ImGui::Checkbox("Filled", &filled)) {
-                if (filled) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                else glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            }
-            ImGui::ColorEdit3("Mat. Ambient", kaColor);
-            ImGui::ColorEdit3("Mat. Diffuse", kdColor);
-            ImGui::ColorEdit3("Mat. Specular", ksColor);
-            ImGui::SliderFloat("Shininess", &sh, 0, 200, "%f", 0);
-
-            ImGui::ColorEdit3("Light Ambient", laColor);
-            ImGui::ColorEdit3("Light Diffuse", ldColor);
-            ImGui::ColorEdit3("Light Specular", lsColor);
-            ImGui::SliderFloat("Speed", &timeDelta, 0.0, 0.3, "%f", 0);
-
-            ImGui::End();
-        }
 
         // Actualizar el enemigo
         EnemyIdle();
