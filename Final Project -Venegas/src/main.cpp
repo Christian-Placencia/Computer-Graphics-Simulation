@@ -48,47 +48,112 @@ GLint modelViewNParameter;
 GLint kaParameter, kdParameter, ksParameter, shParameter;
 GLint laParameter, ldParameter, lsParameter, lPosParameter;
 
+// Light properties
+float sh = 100;
+
+// Global variables
+glm::vec3 playerPos(0.0f, 0.0f, 0.0f);
+float deltaTime = 0;
+
+enum class EnemyType {
+    NORMAL,
+    FAST
+};
+
 // GameObjects
 class GameObject {
-    public:
+public:
     glm::vec3 position, size, velocity;
     float rotation;
     GLuint texture;
+    glm::vec3 ambientColor, diffuseColor, specularColor;
 
-    GameObject(glm::vec3 pos, glm::vec3 sz, GLuint tex) : position(pos), size(sz), texture(tex), velocity(0.0f), rotation(0.0f) {}
+    GameObject(glm::vec3 pos, glm::vec3 sz, GLuint tex, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
+        : position(pos), size(sz), texture(tex), ambientColor(ambient), diffuseColor(diffuse), specularColor(specular), velocity(0.0f), rotation(0.0f) {}
 
-    virtual void update(GLfloat timeDelta) = 0;
-    void render()
-    {
+    virtual void update(GLfloat dt) = 0;
 
+    virtual void render(const glm::mat4& proj, const glm::mat4& view, GLuint modelParameter, GLuint viewParameter, GLuint projParameter, GLuint modelViewNParameter, GLfloat sh, GLint points) {
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
+        model = glm::scale(model, size);
+        glm::mat4 modelView = proj * view * model;
+        glm::mat3 modelViewN = glm::mat3(view * model);
+        modelViewN = glm::transpose(glm::inverse(modelViewN));
+
+        glUniformMatrix4fv(modelParameter, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(viewParameter, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(projParameter, 1, GL_FALSE, glm::value_ptr(proj));
+        glUniformMatrix3fv(modelViewNParameter, 1, GL_FALSE, glm::value_ptr(modelViewN));
+
+        glUniform3fv(kaParameter, 1, glm::value_ptr(ambientColor));
+        glUniform3fv(kdParameter, 1, glm::value_ptr(diffuseColor));
+        glUniform3fv(ksParameter, 1, glm::value_ptr(specularColor));
+        glUniform1fv(shParameter, 1, &sh);
+
+        glDrawArrays(GL_TRIANGLES, 0, points / 3);
     }
+
+    virtual ~GameObject() = default;
 };
 
 class Player : public GameObject {
-    public:
-    int health;
+public:
+    int health = 10;
 
-    Player(glm::vec3 pos, glm::vec3 sz, GLuint tex, int hp) : GameObject(pos, sz, tex), health(hp) {}
+    // Player is blue
+    Player(glm::vec3 pos, glm::vec3 sz)
+        : GameObject(pos, sz, 1, glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0)){}
 
     void update(GLfloat dt) override {
         // Update player position based on input
     }
 };
 
+
 class Enemy : public GameObject {
     public:
-    int health;
+    int health = 2;
+    float speed = 3.0f;
 
-    Enemy(glm::vec3 pos, glm::vec3 sz, GLuint tex, int hp) : GameObject(pos, sz, tex), health(hp) {}
+    // Normal enemy is red
+    Enemy(glm::vec3 pos, glm::vec3 sz)
+        : GameObject(pos, sz, 1, glm::vec3(1, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 0, 0)){}
 
     void update(GLfloat dt) override {
-        // Update player position based on input
+        // Update enemy position based on AI or other logic
+        glm::vec3 direction = playerPos - position;
+        float length = glm::length(direction);
+        if (length != 0) {
+            direction /= length;
+        }
+        position += direction * speed * dt;
+    }
+};
+
+class FastEnemy : public GameObject {
+    public:
+    int health = 3;
+    float speed = 5.0f;
+
+    // Fast enemy is yellow
+    FastEnemy(glm::vec3 pos, glm::vec3 sz)
+        : GameObject(pos, sz, 1, glm::vec3(1, 1, 0), glm::vec3(1, 1, 0), glm::vec3(1, 1, 0)){}
+
+    void update(GLfloat dt) override {
+        // Update enemy position based on AI or other logic
+        glm::vec3 direction = playerPos - position;
+        float length = glm::length(direction);
+        if (length != 0) {
+            direction /= length;
+        }
+        position += direction * speed * dt;
     }
 };
 
 class Bullet : public GameObject {
     public:
-    Bullet(glm::vec3 pos, glm::vec3 sz, GLuint tex) : GameObject(pos, sz, tex) {}
+    Bullet(glm::vec3 pos, glm::vec3 sz)
+        : GameObject(pos, sz, 1, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0)) {}
 
     void update(GLfloat dt) override {
         // Move bullet
@@ -98,25 +163,10 @@ class Bullet : public GameObject {
     }
 };
 
+// Enemy vector
+std::vector<Enemy> enemies;
 
-
-
-float ksColor[3] = { 1, 1, 0 };
-float kaColor[3] = { 0, 0, 0 };
-float kdColor[3] = { 0, 0, 1 };
-float sh = 100;
-float laColor[3] = { 0, 0, 0 };
-float ldColor[3] = { 0, 0, 1 };
-float lsColor[3] = { 1, 1, 0 };
-
-float enemyKsColor[3] = { 0, 1, 0 };
-float enemyKaColor[3] = { 0, 0, 0 };
-float enemyKdColor[3] = { 1, 0, 0 };
-
-float enemyFastKsColor[3] = { 1, 0, 0 }; 
-float enemyFastKaColor[3] = { 0, 0, 0 };
-float enemyFastKdColor[3] = { 1, 0, 0 };
-
+// Enemy vector
 glm::vec4 lPos;
 float ltime = 0;
 float timeDelta = 0;
@@ -370,28 +420,23 @@ void InitShaders(GLuint* program)
     texAsParameter = glGetUniformLocation(shaderProg, "texAs");
 }
 
-void EnemyIdle()
+// Spawn enemy in 1, 1 every 5 seconds
+void SpawnEnemy(glm::vec2 position, float spawnInterval)
 {
-    float directionX = spherePosX - enemyPosX;
-    float directionY = spherePosY - enemyPosY;
-    float length = sqrt(directionX * directionX + directionY * directionY);
-    if (length != 0) {
-        directionX /= length;
-        directionY /= length;
-    }
-    enemyPosX += directionX * enemySpeed;
-    enemyPosY += directionY * enemySpeed;
+    static float spawnTimer = 0.0f;
 
-    float directionXFast = spherePosX - enemyFastPosX;
-    float directionYFast = spherePosY - enemyFastPosY;
-    float lengthFast = sqrt(directionXFast * directionXFast + directionYFast * directionYFast);
-    if (lengthFast != 0) {
-        directionXFast /= lengthFast;
-        directionYFast /= lengthFast;
+    spawnTimer += deltaTime;
+    if (spawnTimer >= spawnInterval) {
+        // Create enemy object
+        Enemy newEnemy(glm::vec3(position.x, 0, position.y), glm::vec3(0.4f, 0.4f, 0.4f));
+        
+        // Add enemy to vector
+        enemies.push_back(newEnemy);
+        
+        spawnTimer = 0.0f;
     }
-    enemyFastPosX += directionXFast * enemyFastSpeed;
-    enemyFastPosY += directionYFast * enemyFastSpeed;
 }
+
 
 int main()
 {
@@ -406,7 +451,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1024, 1024, "Lighting", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Top-Down Shooter", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Cannot open GLFW window" << std::endl;
@@ -416,7 +461,7 @@ int main()
     glfwMakeContextCurrent(window);
 
     gladLoadGL();
-    glViewport(0, 0, 1024, 1024);
+    glViewport(0, 0, 1920, 1080);
 
     InitShaders(&shaderProg);
     BuildScene(1, 1, subdivision, scene);
@@ -441,6 +486,9 @@ int main()
     float u = 1, v = 1;
 
     float lastFrame = 0;
+    
+    // Create player object
+    Player player(glm::vec3(0, 0, 0), glm::vec3(0.4f, 0.4f, 0.4f));
 
     while (!glfwWindowShouldClose(window))
     {
@@ -450,88 +498,29 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        // Cosas de Christian
         float currentFrame = glfwGetTime();
-		float deltaTime = currentFrame - lastFrame;
+		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-
         processInput(window, deltaTime);
 
-        // Actualizar el enemigo
-        EnemyIdle();
+        // Enemigo GameObject
+        // Create enemy objects
+        SpawnEnemy(glm::vec2(1, 1), 5.0f);
 
+        // Vistas
         glm::mat4 proj = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.01f, 1000.0f);
         glm::mat4 view = glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0, 0, 0), glm::vec3(0, 0, -1));
 
-        // Renderizar el jugador
-        glBindVertexArray(VAO);
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(spherePosX, 0.0f, spherePosY));
-        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));  // Ajustar el tama�o de la esfera
-        glm::mat4 modelView = proj * view * model;
-        glm::mat3 modelViewN = glm::mat3(view * model);
-        modelViewN = glm::transpose(glm::inverse(modelViewN));
+        // Rendering in the main 
+        playerPos = player.position;
 
-        glUniformMatrix4fv(modelParameter, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(viewParameter, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(projParameter, 1, GL_FALSE, glm::value_ptr(proj));
-        glUniformMatrix3fv(modelViewNParameter, 1, GL_FALSE, glm::value_ptr(modelViewN));
+        // Render and update enemies in enemy vector
+        for (int i = 0; i < enemies.size(); i++) {
+            enemies[i].update(deltaTime);
 
-        lPos[0] = 100 * sin(ltime);
-        lPos[1] = 0.5;
-        lPos[2] = -100 * cos(ltime);
-        lPos[3] = 1;
-        ltime += timeDelta;
-
-        glUniform3fv(kaParameter, 1, kaColor);
-        glUniform3fv(kdParameter, 1, kdColor);
-        glUniform3fv(ksParameter, 1, ksColor);
-        glUniform1fv(shParameter, 1, &sh);
-
-        glUniform3fv(laParameter, 1, laColor);
-        glUniform3fv(ldParameter, 1, ldColor);
-        glUniform3fv(lsParameter, 1, lsColor);
-        glUniform4fv(lPosParameter, 1, glm::value_ptr(lPos));
-
-        glUniform1iv(texAsParameter, 1, &texAs);
-
-        glDrawArrays(GL_TRIANGLES, 0, points / 3);
-
-        // Renderizar el primer enemigo
-        glm::mat4 modelEnemy = glm::translate(glm::mat4(1.0f), glm::vec3(enemyPosX, 0.0f, enemyPosY));
-        modelEnemy = glm::scale(modelEnemy, glm::vec3(0.4f, 0.4f, 0.4f));  // Ajustar el tama�o de la esfera
-        glm::mat4 modelViewEnemy = proj * view * modelEnemy;
-        glm::mat3 modelViewNEnemy = glm::mat3(view * modelEnemy);
-        modelViewNEnemy = glm::transpose(glm::inverse(modelViewNEnemy));
-
-        glUniformMatrix4fv(modelParameter, 1, GL_FALSE, glm::value_ptr(modelEnemy));
-        glUniformMatrix4fv(viewParameter, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(projParameter, 1, GL_FALSE, glm::value_ptr(proj));
-        glUniformMatrix3fv(modelViewNParameter, 1, GL_FALSE, glm::value_ptr(modelViewNEnemy));
-
-        glUniform3fv(kaParameter, 1, enemyKaColor);
-        glUniform3fv(kdParameter, 1, enemyKdColor);
-        glUniform3fv(ksParameter, 1, enemyKsColor);
-        glUniform1fv(shParameter, 1, &sh);
-
-        glDrawArrays(GL_TRIANGLES, 0, points / 3);
-
-        // Render fast enemy
-        glm::mat4 modelEnemyFast = glm::translate(glm::mat4(1.0f), glm::vec3(enemyFastPosX, 0.0f, enemyFastPosY));
-        modelEnemyFast = glm::scale(modelEnemyFast, glm::vec3(0.4f, 0.4f, 0.4f));  // Ajustar el tama�o del enemigo r�pido
-        glm::mat4 modelViewEnemyFast = proj * view * modelEnemyFast;
-        glm::mat3 modelViewNEnemyFast = glm::mat3(view * modelEnemyFast);
-        modelViewNEnemyFast = glm::transpose(glm::inverse(modelViewNEnemyFast));
-
-        glUniformMatrix4fv(modelParameter, 1, GL_FALSE, glm::value_ptr(modelEnemyFast));
-        glUniformMatrix4fv(viewParameter, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(projParameter, 1, GL_FALSE, glm::value_ptr(proj));
-        glUniformMatrix3fv(modelViewNParameter, 1, GL_FALSE, glm::value_ptr(modelViewNEnemyFast));
-
-        glUniform3fv(kaParameter, 1, enemyFastKaColor);
-        glUniform3fv(kdParameter, 1, enemyFastKdColor);
-        glUniform3fv(ksParameter, 1, enemyFastKsColor);
-        glUniform1fv(shParameter, 1, &sh);
-
-        glDrawArrays(GL_TRIANGLES, 0, points / 3);
+            enemies[i].render(proj, view, modelParameter, viewParameter, projParameter, modelViewNParameter, sh, points);
+        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
