@@ -184,7 +184,7 @@ class Enemy : public GameObject {
     int health = 2;
     float speed = 3.0f;
 
-    // Normal enemy is red
+    // Normal enemy is green
     Enemy(glm::vec3 pos, glm::vec3 sz)
         : GameObject(pos, sz, 1, glm::vec3(0,0.2,0), glm::vec3(0,1,0), glm::vec3(1,1,0)){}
 
@@ -204,7 +204,7 @@ class FastEnemy : public GameObject {
     int health = 3;
     float speed = 5.0f;
 
-    // Fast enemy is yellow
+    // Fast enemy is red
     FastEnemy(glm::vec3 pos, glm::vec3 sz)
         : GameObject(pos, sz, 1, glm::vec3(0.2, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 1, 0)){}
 
