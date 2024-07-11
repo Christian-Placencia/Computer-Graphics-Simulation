@@ -55,6 +55,7 @@ glm::vec4 lPos;
 // Camera settings
 GLFWwindow* window;
 glm::mat4 proj = glm::ortho(-4.5f, 4.5f, -5.0f, 5.0f, 0.01f, 1000.0f);
+// glm::mat4 proj = glm::perspective(glm::radians(45.0f), 1920.0f / 1080.0f, 0.1f, 1000.0f);
 glm::mat4 view = glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0, 0, 0), glm::vec3(0, 0, -1));
 
 // Screen settings
@@ -80,6 +81,10 @@ enum class EnemyType {
     NORMAL,
     FAST
 };
+
+// Function prototypes
+void CreateRectPrism(vector<GLfloat>* a, float width, float height, float depth, float u, float v, int n);
+void LoadTexture();
 
 // GameObjects
 class GameObject {
@@ -222,7 +227,42 @@ class Wall : public GameObject {
     public:
     Wall(glm::vec3 pos, glm::vec3 sz)
         : GameObject(pos, sz, 1, glm::vec3(1, 1, 1), glm::vec3(1, 1, 1), glm::vec3(1, 1, 1)){}
+
+    void update() override {
+        // Walls are static
+    }
+
+    void render() override {
+        vector<GLfloat> v;
+        CreateRectPrism(&v, size.x, size.y, size.z, 1.0f, 1.0f, subdivision);
+
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+
+        glBindVertexArray(VAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        points = v.size();
+        glBufferData(GL_ARRAY_BUFFER, points * sizeof(GLfloat), &v[0], GL_STATIC_DRAW);
+        v.clear();
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+        glEnableVertexAttribArray(2);
+
+        if (!textureLoaded) {
+            LoadTexture();
+            textureLoaded = true;
+        }
+
+        GameObject::render();
+    }
 };
+
+vector<Wall> walls;
 
 
 void LoadTexture()
@@ -551,6 +591,17 @@ int main()
 
     float lastFrame = 0;
     
+    // Create level walls
+    Wall wall1(glm::vec3(-4.5, 0, -4.5), glm::vec3(1.0f, 5.0f, 10.0f));
+    Wall wall2(glm::vec3(-4.5, 0, -4.5), glm::vec3(10.0f, 5.0f, 1.0f));
+    Wall wall3(glm::vec3(-4.5, 0, 4.5), glm::vec3(10.0f, 5.0f, 1.0f));
+    Wall wall4(glm::vec3(4.5, 0, -4.5), glm::vec3(1.0f, 5.0f, 10.0f));
+
+    walls.push_back(wall1);
+    walls.push_back(wall2);
+    walls.push_back(wall3);
+    walls.push_back(wall4);
+
     // Create player object
     Player player(glm::vec3(0, 0, 0), glm::vec3(0.4f, 0.4f, 0.4f));
 
@@ -561,6 +612,12 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Render walls
+        // ! Rendering walls makes EVERYTHING a wall
+        // for (int i = 0; i < walls.size(); i++) {
+        //     walls[i].render();
+        // }
 
         // Time flow
         currentFrame = glfwGetTime();
@@ -593,6 +650,7 @@ int main()
             bullets[i].update();
             bullets[i].render();
         }
+
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
