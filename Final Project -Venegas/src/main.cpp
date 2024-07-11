@@ -146,7 +146,7 @@ public:
 
     // Player is blue
     Player(glm::vec3 pos, glm::vec3 sz)
-        : GameObject(pos, sz, 1, glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0)){}
+        : GameObject(pos, sz, 1, glm::vec3(0, 0, 0.2), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0)){}
 
     void update() override {
         // Update player position based on input
@@ -186,7 +186,7 @@ class Enemy : public GameObject {
 
     // Normal enemy is red
     Enemy(glm::vec3 pos, glm::vec3 sz)
-        : GameObject(pos, sz, 1, glm::vec3(1,1,1), glm::vec3(1,1,1), glm::vec3(1,1,1)){}
+        : GameObject(pos, sz, 1, glm::vec3(0,0.2,0), glm::vec3(0,1,0), glm::vec3(1,1,0)){}
 
     void update() override {
         // Update enemy position based on AI or other logic
@@ -206,7 +206,7 @@ class FastEnemy : public GameObject {
 
     // Fast enemy is yellow
     FastEnemy(glm::vec3 pos, glm::vec3 sz)
-        : GameObject(pos, sz, 1, glm::vec3(1, 1, 0), glm::vec3(1, 1, 0), glm::vec3(1, 1, 0)){}
+        : GameObject(pos, sz, 1, glm::vec3(0.2, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 1, 0)){}
 
     void update() override {
         // Update enemy position based on AI or other logic
@@ -566,7 +566,11 @@ int main()
     glfwMakeContextCurrent(window);
 
     gladLoadGL();
-    glViewport(0, 0, 1920, 1080);
+
+    int screenWidth, screenHeight;
+    glfwGetWindowSize(window, &screenWidth, &screenHeight);
+
+    glViewport(0, 0, screenWidth, screenHeight);
 
     InitShaders(&shaderProg);
     BuildScene(1, 1, subdivision, scene);
@@ -628,6 +632,14 @@ int main()
         SpawnEnemy(glm::vec2(1, 1), 10.0f, EnemyType::NORMAL);
         SpawnEnemy(glm::vec2(-2, -3), 20.0f, EnemyType::FAST);
 
+        glm::vec4 lPos(100, 100, 100, 100);
+        glm::vec3 lightColor(1, 1, 0);
+
+        glUniform4fv(lPosParameter, 1, glm::value_ptr(lPos));
+        glUniform3fv(laParameter, 1, glm::value_ptr(lightColor * 1.0f));  // Ambient light
+        glUniform3fv(ldParameter, 1, glm::value_ptr(lightColor * 1.0f));  // Diffuse light
+        glUniform3fv(lsParameter, 1, glm::value_ptr(lightColor * 1.0f));
+
         // Show and update the player
         playerPos = player.position;
         player.update();
@@ -656,6 +668,9 @@ int main()
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
         glfwPollEvents();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
     }
 
     glDeleteProgram(shaderProg);
