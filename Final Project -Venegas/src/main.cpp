@@ -810,9 +810,10 @@ int main()
     glViewport(0, 0, screenWidth, screenHeight);
 
     InitShaders(&shaderProg);
+    BuildScene(1, 1, subdivision, scene, PRISM);
+    BuildScene(1, 1, subdivision, scene, CIRCLE);
     BuildScene(1, 1, subdivision, scene, SPHERE);
-    // BuildScene(1, 1, subdivision, scene, PRISM);
-    // BuildScene(1, 1, subdivision, scene, CIRCLE);
+
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -846,16 +847,15 @@ int main()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // for (int i = 0; i < walls.size(); i++) {
-        //     walls[i].render();
-        // }
+         for (int i = 0; i < walls.size(); i++) {
+             walls[i].render();
+         }
 
         currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        SpawnEnemy(glm::vec2(2, 2), 10.0f, EnemyType::NORMAL);
-        // SpawnEnemy(glm::vec2(1, 1), 3.0f, EnemyType::FAST);
+        SpawnEnemy(glm::vec2(2, 2), 12.0f, EnemyType::NORMAL);
 
         glm::vec4 lPos(100, 100, 100, 100);
         glm::vec3 lightColor(1, 1, 0);
