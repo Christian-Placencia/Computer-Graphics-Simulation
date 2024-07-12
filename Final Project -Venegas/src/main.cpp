@@ -261,13 +261,13 @@ public:
 
     void update() override {
         float moveAmount = speed * deltaTime;
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && position.z < bounds[3])
             position.z -= moveAmount;
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && position.z > bounds[2])
             position.z += moveAmount;
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && position.x > (bounds[0] + 0.2f))
             position.x -= moveAmount;
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && position.x < (bounds[1] - 0.2f))
             position.x += moveAmount;
 
         reloadTimer += deltaTime;
