@@ -201,17 +201,22 @@ public:
 class Bullet : public GameObject {
 public:
     bool active = true;
+    float lifetime = 3.0f; // Bullet lifetime in seconds
 
     Bullet(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
         : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), SPHERE) {}
 
-
     void update() override {
-        position += velocity * deltaTime;
-        //handleWallCollision();
+        if (lifetime > 0) {
+            position += velocity * deltaTime;
+            lifetime -= deltaTime;
+        }
+        else {
+            // active = false;
+        }
+        handleWallCollision();
     }
 
-    // TODO: Create the wall bounds variables on the private local variables.
     void handleWallCollision() {
         if (position.x <= bounds[0] || position.x >= bounds[1]) {
             velocity.x = -velocity.x;
@@ -222,22 +227,15 @@ public:
     }
 
     Bullet(const Bullet& other)
-        : GameObject(other) {}
+        : GameObject(other), lifetime(other.lifetime) {}
 
     Bullet& operator=(const Bullet& other) {
         if (this != &other) {
             GameObject::operator=(other);
+            lifetime = other.lifetime;
         }
         return *this;
     }
-
-    // !! Global variables
-    private:
-        const float wallBounds[4] = { -4.0f, 4.0f, -4.5f, 4.5f };
-
-    // ! Floor with texture, simple shadows?
-    // Y location 0.2f for the floor
-    // Put a grey triangle fan on the floor, 0.1f height
 };
 
 std::vector<Bullet> bullets;
@@ -247,6 +245,7 @@ public:
     float speed = 5.0f;
     float bulletReloadSpeed = 0.2f;
     float reloadTimer = 0.0f;
+    float bulletLength = 10.0f;
     bool isGameOver = false;
 
     Player(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
@@ -260,10 +259,7 @@ public:
         }
     }
 
-
     void update() override {
-        // GameObject::update();
-
         float moveAmount = speed * deltaTime;
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             position.z -= moveAmount;
@@ -278,30 +274,26 @@ public:
 
         // Shoot bullet on mouse click
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            // Only fire when the reload speed has passed
             if (reloadTimer >= bulletReloadSpeed) {
-                // Create bullet object and add to vector
                 glm::vec3 mouseWorldPos = getMouseWorldPosition();
                 glm::vec3 direction = mouseWorldPos - position;
-                direction = glm::normalize(direction);
 
-				std::cout << "Normal direction: " << direction.x << ", " << direction.y << ", " << direction.z << std::endl;    
+                float lengthXZ = glm::sqrt(direction.x * direction.x + direction.z * direction.z);
+				lengthXZ /= bulletLength;
+
+                direction.x /= lengthXZ;
+                direction.z /= lengthXZ;
 
                 Bullet newBullet(position, glm::vec3(0.1f, 0.1f, 0.1f), 0.05f);
-                newBullet.velocity = direction * 10.0f;
+                newBullet.velocity = direction;
                 bullets.push_back(newBullet);
 
-                // Debug
-                std::cout << "Bullet created at position: " << position.x << ", " << position.y << ", " << position.z << std::endl;
-                std::cout << "Bullet velocity: " << newBullet.velocity.x << ", " << newBullet.velocity.y << ", " << newBullet.velocity.z << std::endl;
-
-                // Reset timer
                 reloadTimer = 0.0f;
             }
         }
-        if(isGameOver) {
-			showGameOverScreen = true;
-		}
+        if (isGameOver) {
+            showGameOverScreen = true;
+        }
     }
 
     glm::vec3 getMouseWorldPosition() {
@@ -686,24 +678,38 @@ void CreateRectPrism(vector<GLfloat>* a, float width, float height, float depth,
     AddFace(a, p0, p1, p5, p4, normalBottom, u, v, n);
 }
 
-void CreateCircle(std::vector<GLfloat>* vertices, float radius, int segments) {
+void CreateCircle(vector<GLfloat>* vertices, float radius, int segments) {
     vertices->clear();
-    for (int i = 0; i <= segments; ++i) {
-        float theta = 2.0f * 3.1415926f * float(i) / float(segments); // get the current angle
-        float x = radius * cosf(theta); // calculate the x component
-        float y = radius * sinf(theta); // calculate the y component
+    GLfloat angleStep = 2.0f * M_PI / segments;
 
-        vertices->push_back(x);
-        vertices->push_back(y);
-        vertices->push_back(0.0f); // z component is 0 for 2D circle
-        // Optional: Add other vertex attributes like normals and texture coordinates here
-        vertices->push_back(0.0f); // normal x
-        vertices->push_back(0.0f); // normal y
-        vertices->push_back(1.0f); // normal z
-        vertices->push_back(x / (2.0f * radius) + 0.5f); // texture x
-        vertices->push_back(y / (2.0f * radius) + 0.5f); // texture y
+    // Center vertex
+    glm::vec3 centerVertex = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);  // Normal vector for flat circle
+
+    // Add center vertex
+    AddVertex(vertices, centerVertex);
+    AddVertex(vertices, normal);
+    AddUV(vertices, glm::vec2(0.5f, 0.5f));  // Center vertex UV
+
+    // Vertices around the circle
+    for (int i = 0; i <= segments; ++i) {
+        float angle = i * angleStep;
+        float x = radius * cosf(angle);
+        float z = radius * sinf(angle);
+
+        glm::vec3 vertex = glm::vec3(x, 0.0f, z);
+        glm::vec3 vertexNormal = normal;  // Same normal for all vertices
+
+        AddVertex(vertices, vertex);
+        AddVertex(vertices, vertexNormal);
+
+        // Texture coordinates mapping (adjust as necessary)
+        float textureX = 0.5f + 0.5f * cosf(angle);
+        float textureY = 0.5f + 0.5f * sinf(angle);
+        AddUV(vertices, glm::vec2(textureX, textureY));
     }
 }
+
 
 void BuildScene(float uu, float vv, int subdiv, int scene, Shape shape) {
     vector<GLfloat> v;
@@ -753,7 +759,6 @@ void BuildScene(float uu, float vv, int subdiv, int scene, Shape shape) {
         circleVBO = VBO;
     }
 }
-
 
 // Mouse and keyboard callback
 void MouseCallback(GLFWwindow* window, double x, double y) {
@@ -838,8 +843,6 @@ void CheckCollisions(Player& player) {
     }
 
     for (auto& bullet : bullets) {
-        bullet.handleWallCollision();
-
         for (auto& enemy : enemies) {
             if (bullet.collider.checkCollision(enemy.collider)) {
                 enemy.health = 0;
@@ -886,34 +889,6 @@ void CheckCollisions(Player& player) {
 }
 
 // TODO: Consider have each object have a check collision function
-void checkBulletCollisions(std::vector<Bullet>& bullets, std::vector<Enemy>& enemies, std::vector<FastEnemy>& fastEnemies) {
-    for (auto& bullet : bullets) {
-        bullet.handleWallCollision();
-
-        // Check collision with regular enemies
-        for (auto& enemy : enemies) {
-            if (bullet.collider.checkCollision(enemy.collider)) {
-                enemy.health = 0; // Mark enemy for removal
-                bullet.active = false; // Mark bullet for removal
-            }
-        }
-
-        // Check collision with fast enemies
-        for (auto& fastEnemy : fastEnemies) {
-            if (bullet.collider.checkCollision(fastEnemy.collider)) {
-                fastEnemy.health = 0; // Mark fast enemy for removal
-                bullet.active = false; // Mark bullet for removal
-            }
-        }
-    }
-
-    // Remove dead enemies
-    enemies.erase(remove_if(enemies.begin(), enemies.end(), [](Enemy& e) { return e.health <= 0; }), enemies.end());
-    fastEnemies.erase(remove_if(fastEnemies.begin(), fastEnemies.end(), [](FastEnemy& e) { return e.health <= 0; }), fastEnemies.end());
-
-    // Remove bullets that have collided
-    bullets.erase(remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return b.active == false; }), bullets.end());
-}
 
 void CreateWalls()
 {
@@ -960,8 +935,8 @@ int main()
 
     InitShaders(&shaderProg);
     BuildScene(1, 1, subdivision, scene, SPHERE);
-    //BuildScene(1, 1, subdivision, scene, PRISM);
-    //BuildScene(1, 1, subdivision, scene, CIRCLE);
+    // BuildScene(1, 1, subdivision, scene, PRISM);
+    // BuildScene(1, 1, subdivision, scene, CIRCLE);
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -1034,7 +1009,6 @@ int main()
         }
 
         CheckCollisions(player);
-        // checkBulletCollisions(bullets, enemies, fastEnemies);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
