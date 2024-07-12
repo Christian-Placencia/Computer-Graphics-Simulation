@@ -51,13 +51,21 @@ GLint modelViewNParameter;
 GLint kaParameter, kdParameter, ksParameter, shParameter;
 GLint laParameter, ldParameter, lsParameter, lPosParameter;
 
+// Global variables
+glm::vec3 playerPos(0.0f, 0.0f, 0.0f);
+float deltaTime = 0;
+float currentFrame;
+int maxPlayerHealth = 10;
+int playerHealth = maxPlayerHealth;
+float bounds[4] = { -4.5f, 4.5f, -5.0f, 5.0f };
+
 // Light properties
 float sh = 100;
 glm::vec4 lPos;
 
 // Camera settings
 GLFWwindow* window;
-glm::mat4 proj = glm::ortho(-4.5f, 4.5f, -5.0f, 5.0f, 0.01f, 1000.0f);
+glm::mat4 proj = glm::ortho(bounds[0], bounds[1], bounds[2], bounds[3], 0.01f, 1000.0f);
 // glm::mat4 proj = glm::perspective(glm::radians(45.0f), 1920.0f / 1080.0f, 0.1f, 1000.0f);
 glm::mat4 view = glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0, 0, 0), glm::vec3(0, 0, -1));
 
@@ -75,12 +83,7 @@ static bool textureLoaded = false;
 int subdivision = 10;
 GLuint VAO, VBO;
 
-// Global variables
-glm::vec3 playerPos(0.0f, 0.0f, 0.0f);
-float deltaTime = 0;
-float currentFrame;
-int maxPlayerHealth = 10;
-int playerHealth = maxPlayerHealth;
+
 
 enum class EnemyType {
     NORMAL,
@@ -96,24 +99,28 @@ enum class Shape {
 class Collider {
 private:
     const glm::vec3* positionPtr;
-	float* radius;
+    float* radius;
+    float radiusSquared;  // Changed to a normal float
 
 public:
-    Collider(const glm::vec3* posPtr, float* r) : positionPtr(posPtr), radius(r) {}
+    Collider(const glm::vec3* posPtr, float* r) : positionPtr(posPtr), radius(r), radiusSquared((*r)* (*r)) {}
 
     bool checkCollision(const Collider& other) const {
-        float distance = glm::distance(*positionPtr, *other.positionPtr);
-        return distance < (*radius + *other.radius);
+        // Calculate the squared distance between the positions
+        glm::vec3 diff = *positionPtr - *other.positionPtr;
+        float distanceSquared = glm::dot(diff, diff);
+
+        // Calculate the sum of the radii and its square
+        float radiiSum = *radius + *other.radius;
+        float radiiSumSquared = radiiSum * radiiSum;
+
+        // Check if the squared distance is less than the squared sum of the radii
+        return distanceSquared < radiiSumSquared;
     }
 
     const glm::vec3& getPosition() const {
         return *positionPtr;
     }
-
-    // TODO: Calculate the square distance instead of glm::distance
-    // TODO: radius2 = radius * radius, implement internal variable
-    // glm::vec3 temp = A - B;
-    // float distSqr = dot(temp, temp);
 };
 
 // Function prototypes
@@ -194,10 +201,10 @@ public:
 
     // TODO: Create the wall bounds variables on the private local variables.
     void handleWallCollision() {
-        if (position.x <= -4.0f || position.x >= 4.0f) {
+        if (position.x <= bounds[0] || position.x >= bounds[1]) {
             velocity.x = -velocity.x;
         }
-        if (position.z <= -4.5f || position.z >= 4.5f) {
+        if (position.z <= bounds[2] || position.z >= bounds[3]) {
             velocity.z = -velocity.z;
         }
     }
@@ -302,7 +309,7 @@ void renderPlayerHealthBar() {
     if (!showGameOverScreen) {  // Solo muestra la barra de vida si el juego no ha terminado
         ImGui::Begin("Salud del Jugador");  // Comienza una nueva ventana de ImGui
 
-        // Calcula el porcentaje de la vida actual en comparación con la vida máxima
+        // Calcula el porcentaje de la vida actual en comparaciï¿½n con la vida mï¿½xima
         float healthPercentage = (float)player.health / (float)player.maxHealth;
 
         // Barra de progreso para la salud
@@ -325,7 +332,7 @@ void renderGameOverScreen() {
     if (showGameOverScreen) {
         // Centrar la ventana de Game Over en la pantalla
         ImGui::SetNextWindowPos(ImVec2(960, 540), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-        ImGui::SetNextWindowSize(ImVec2(400, 200)); // Tamaño de la ventana
+        ImGui::SetNextWindowSize(ImVec2(400, 200)); // Tamaï¿½o de la ventana
 
         ImGui::Begin("Game Over", &showGameOverScreen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
@@ -333,16 +340,16 @@ void renderGameOverScreen() {
         ImGui::Text("Game Over");
         ImGui::Text("Has perdido toda la vida!");
 
-        // Botón para reiniciar el juego o cerrar la pantalla de Game Over
+        // Botï¿½n para reiniciar el juego o cerrar la pantalla de Game Over
         if (ImGui::Button("Reiniciar", ImVec2(120, 50))) {
             // Reiniciar el juego (resetear la salud del jugador y otros estados necesarios)
-            player.health = 10; // Suponiendo que 10 es la salud máxima
-            // Restablecer la posición del jugador y otras variables necesarias
-            player.position = glm::vec3(0, 0, 0);  // Ejemplo de reinicio de posición
+            player.health = 10; // Suponiendo que 10 es la salud mï¿½xima
+            // Restablecer la posiciï¿½n del jugador y otras variables necesarias
+            player.position = glm::vec3(0, 0, 0);  // Ejemplo de reinicio de posiciï¿½n
             showGameOverScreen = false;  // Cerrar la pantalla de Game Over
         }
 
-        // Botón para salir del juego (opcional)
+        // Botï¿½n para salir del juego (opcional)
         ImGui::SameLine();
         if (ImGui::Button("Salir", ImVec2(120, 50))) {
             glfwSetWindowShouldClose(window, GL_TRUE); // Suponiendo que 'window' es tu ventana GLFW
@@ -350,26 +357,26 @@ void renderGameOverScreen() {
 
         ImGui::End();
     }
-}
+}*/
 
 //Health bar
 
-/*
+
 void renderImGui() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     ImGui::Begin("Player HP");
-    ImGui::Text("HP: %d", player.health);
+    ImGui::Text("HP: %d", playerHealth);
 
     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
-    ImGui::ProgressBar((float)player.health / 10.0f);
+    ImGui::ProgressBar((float)playerHealth / 10.0f);
     ImGui::PopStyleColor();
     ImGui::PopStyleVar();
 
     ImGui::End();
-}*/
+}
 
 void renderUI() {
     ImGui_ImplOpenGL3_NewFrame();
@@ -380,7 +387,7 @@ void renderUI() {
     if (!showGameOverScreen && playerHealth > 0) {
         ImGui::Begin("Salud del Jugador");  // Comienza una nueva ventana de ImGui
 
-        // Calcula el porcentaje de la vida actual en comparación con la vida máxima
+        // Calcula el porcentaje de la vida actual en comparaciï¿½n con la vida mï¿½xima
         float healthPercentage = (float)playerHealth / (float)maxPlayerHealth;
 
         // Barra de progreso para la salud
@@ -393,7 +400,7 @@ void renderUI() {
     if (showGameOverScreen) {
         // Centrar la ventana de Game Over en la pantalla
         ImGui::SetNextWindowPos(ImVec2(960, 540), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-        ImGui::SetNextWindowSize(ImVec2(400, 200)); // Tamaño de la ventana
+        ImGui::SetNextWindowSize(ImVec2(400, 200)); // Tamaï¿½o de la ventana
 
         ImGui::Begin("Game Over", &showGameOverScreen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
@@ -401,15 +408,15 @@ void renderUI() {
         ImGui::Text("Game Over");
         ImGui::Text("Has perdido toda la vida!");
 
-        // Botón para reiniciar el juego o cerrar la pantalla de Game Over
+        // Botï¿½n para reiniciar el juego o cerrar la pantalla de Game Over
         if (ImGui::Button("Reiniciar", ImVec2(120, 50))) {
             // Reiniciar el juego (resetear la salud del jugador y otros estados necesarios)
-            playerHealth = 10; // Suponiendo que 10 es la salud máxima
-            playerPos = glm::vec3(0, 0, 0);  // Ejemplo de reinicio de posición
+            playerHealth = 10; // Suponiendo que 10 es la salud mï¿½xima
+            playerPos = glm::vec3(0, 0, 0);  // Ejemplo de reinicio de posiciï¿½n
             showGameOverScreen = false;  // Cerrar la pantalla de Game Over
         }
 
-        // Botón para salir del juego (opcional)
+        // Botï¿½n para salir del juego (opcional)
         ImGui::SameLine();
         if (ImGui::Button("Salir", ImVec2(120, 50))) {
             glfwSetWindowShouldClose(window, GL_TRUE); // Suponiendo que 'window' es tu ventana GLFW
@@ -443,10 +450,10 @@ public:
     }
 
     void handleWallCollision() {
-        if (position.x <= -4.5f || position.x >= 4.5f) {
+        if (position.x <= bounds[0] || position.x >= bounds[1]) {
             velocity.x = -velocity.x;
         }
-        if (position.z <= -5.0f || position.z >= 5.0f) {
+        if (position.z <= bounds[2] || position.z >= bounds[3]) {
             velocity.z = -velocity.z;
         }
     }
@@ -473,10 +480,10 @@ public:
     }
 
     void handleWallCollision() {
-        if (position.x <= -4.5f || position.x >= 4.5f) {
+        if (position.x <= bounds[0] || position.x >= bounds[1]) {
             velocity.x = -velocity.x;
         }
-        if (position.z <= -5.0f || position.z >= 5.0f) {
+        if (position.z <= bounds[2] || position.z >= bounds[3]) {
             velocity.z = -velocity.z;
         }
     }
@@ -894,6 +901,20 @@ void checkBulletCollisions(std::vector<Bullet>& bullets, std::vector<Enemy>& ene
     bullets.erase(remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return b.active == false; }), bullets.end());
 }
 
+void CreateWalls()
+{
+    // Create walls on the edges of the scene, defined by the 'bounds' variable
+    Wall wall1(glm::vec3(bounds[0], 0, bounds[0]), glm::vec3(1.0f, 5.0f, 10.0f));
+    Wall wall2(glm::vec3(bounds[0], 0, bounds[0]), glm::vec3(10.0f, 5.0f, 1.0f));
+    Wall wall3(glm::vec3(bounds[0], 0, bounds[1]), glm::vec3(10.0f, 5.0f, 1.0f));
+    Wall wall4(glm::vec3(bounds[1], 0, bounds[0]), glm::vec3(1.0f, 5.0f, 10.0f));
+
+    walls.push_back(wall1);
+    walls.push_back(wall2);
+    walls.push_back(wall3);
+    walls.push_back(wall4);
+}
+
 int main()
 {
     bool drawScene = true;
@@ -946,15 +967,7 @@ int main()
 
     float lastFrame = 0;
 
-    Wall wall1(glm::vec3(-4.5, 0, -4.5), glm::vec3(1.0f, 5.0f, 10.0f));
-    Wall wall2(glm::vec3(-4.5, 0, -4.5), glm::vec3(10.0f, 5.0f, 1.0f));
-    Wall wall3(glm::vec3(-4.5, 0, 4.5), glm::vec3(10.0f, 5.0f, 1.0f));
-    Wall wall4(glm::vec3(4.5, 0, -4.5), glm::vec3(1.0f, 5.0f, 10.0f));
-
-    walls.push_back(wall1);
-    walls.push_back(wall2);
-    walls.push_back(wall3);
-    walls.push_back(wall4);
+    CreateWalls();
 
     Player player(glm::vec3(0, 0, 0), glm::vec3(0.4f, 0.4f, 0.4f), 0.2f);
 
