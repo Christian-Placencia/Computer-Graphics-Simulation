@@ -37,6 +37,9 @@ using namespace std;
 TrackBallC trackball;
 bool mouseLeft, mouseMid, mouseRight;
 
+// ImGui variables
+bool showGameOverScreen = false;
+
 // Shader program ID
 GLuint shaderProg;
 GLint modelParameter;
@@ -211,12 +214,23 @@ std::vector<Bullet> bullets;
 class Player : public GameObject {
 public:
     int health = 10;
+    int maxHealth = 10; // For UI purposes 
     float speed = 5.0f;
     float bulletReloadSpeed = 0.2f;
     float reloadTimer = 0.0f;
+    bool isGameOver = false;
 
     Player(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
         : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 0.2), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0)) {}
+
+    void takeDamage(int damage) {
+        health -= damage;
+        if (health <= 0) {
+            health = 0;
+            isGameOver = true;
+        }
+    }
+
 
     void update() override {
         // GameObject::update();
@@ -256,6 +270,9 @@ public:
                 reloadTimer = 0.0f;
             }
         }
+        if(isGameOver) {
+			showGameOverScreen = true;
+		}
     }
 
     glm::vec3 getMouseWorldPosition() {
@@ -269,6 +286,65 @@ public:
         return objCoord;
     }
 };
+
+/*
+void renderPlayerHealthBar() {
+    if (!showGameOverScreen) {  // Solo muestra la barra de vida si el juego no ha terminado
+        ImGui::Begin("Salud del Jugador");  // Comienza una nueva ventana de ImGui
+
+        // Calcula el porcentaje de la vida actual en comparación con la vida máxima
+        float healthPercentage = (float)player.health / (float)player.maxHealth;
+
+        // Barra de progreso para la salud
+        ImGui::Text("Vida: %d / %d", player.health, player.maxHealth);
+        ImGui::ProgressBar(healthPercentage, ImVec2(0.0f, 0.0f), "");
+        ImGui::End();
+    }
+}
+*/
+void checkPlayerHealth() {
+    // Suponiendo que 'player' es tu objeto jugador y tiene un atributo 'health'
+    if (player.health <= 0) {
+        showGameOverScreen = true;  // Activar la pantalla de Game Over
+    }
+}
+
+
+/*
+void renderGameOverScreen() {
+    if (showGameOverScreen) {
+        // Centrar la ventana de Game Over en la pantalla
+        ImGui::SetNextWindowPos(ImVec2(960, 540), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(400, 200)); // Tamaño de la ventana
+
+        ImGui::Begin("Game Over", &showGameOverScreen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+        // Texto centrado en la ventana
+        ImGui::Text("Game Over");
+        ImGui::Text("Has perdido toda la vida!");
+
+        // Botón para reiniciar el juego o cerrar la pantalla de Game Over
+        if (ImGui::Button("Reiniciar", ImVec2(120, 50))) {
+            // Reiniciar el juego (resetear la salud del jugador y otros estados necesarios)
+            player.health = 10; // Suponiendo que 10 es la salud máxima
+            // Restablecer la posición del jugador y otras variables necesarias
+            player.position = glm::vec3(0, 0, 0);  // Ejemplo de reinicio de posición
+            showGameOverScreen = false;  // Cerrar la pantalla de Game Over
+        }
+
+        // Botón para salir del juego (opcional)
+        ImGui::SameLine();
+        if (ImGui::Button("Salir", ImVec2(120, 50))) {
+            glfwSetWindowShouldClose(window, GL_TRUE); // Suponiendo que 'window' es tu ventana GLFW
+        }
+
+        ImGui::End();
+    }
+}
+
+//Health bar
+
+/*
 void renderImGui() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -283,6 +359,57 @@ void renderImGui() {
     ImGui::PopStyleVar();
 
     ImGui::End();
+}*/
+
+void renderUI() {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // Renderiza la barra de vida del jugador si el juego no ha terminado
+    if (!showGameOverScreen && player.health > 0) {
+        ImGui::Begin("Salud del Jugador");  // Comienza una nueva ventana de ImGui
+
+        // Calcula el porcentaje de la vida actual en comparación con la vida máxima
+        float healthPercentage = (float)player.health / (float)player.maxHealth;
+
+        // Barra de progreso para la salud
+        ImGui::Text("Vida: %d / %d", player.health, player.maxHealth);
+        ImGui::ProgressBar(healthPercentage, ImVec2(-1.0f, 0.0f), "");  // -1.0f para usar toda la anchura de la ventana
+        ImGui::End();
+    }
+
+    // Renderizar la pantalla de Game Over si es necesario
+    if (showGameOverScreen) {
+        // Centrar la ventana de Game Over en la pantalla
+        ImGui::SetNextWindowPos(ImVec2(960, 540), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(400, 200)); // Tamaño de la ventana
+
+        ImGui::Begin("Game Over", &showGameOverScreen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+        // Texto centrado en la ventana
+        ImGui::Text("Game Over");
+        ImGui::Text("Has perdido toda la vida!");
+
+        // Botón para reiniciar el juego o cerrar la pantalla de Game Over
+        if (ImGui::Button("Reiniciar", ImVec2(120, 50))) {
+            // Reiniciar el juego (resetear la salud del jugador y otros estados necesarios)
+            player.health = 10; // Suponiendo que 10 es la salud máxima
+            player.position = glm::vec3(0, 0, 0);  // Ejemplo de reinicio de posición
+            showGameOverScreen = false;  // Cerrar la pantalla de Game Over
+        }
+
+        // Botón para salir del juego (opcional)
+        ImGui::SameLine();
+        if (ImGui::Button("Salir", ImVec2(120, 50))) {
+            glfwSetWindowShouldClose(window, GL_TRUE); // Suponiendo que 'window' es tu ventana GLFW
+        }
+
+        ImGui::End();
+    }
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 class Enemy : public GameObject {
