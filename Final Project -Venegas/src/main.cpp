@@ -247,7 +247,7 @@ public:
     float bulletReloadSpeed = 0.2f;
     float reloadTimer = 0.0f;
     float bulletLength = 10.0f;
-    bool isGameOver = false;
+    bool active = true;
 
     Player(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
         : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 0.2), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0), SPHERE) {}
@@ -256,7 +256,7 @@ public:
         playerHealth -= damage;
         if (playerHealth <= 0) {
             playerHealth = 0;
-            isGameOver = true;
+           
         }
     }
 
@@ -292,7 +292,8 @@ public:
                 reloadTimer = 0.0f;
             }
         }
-        if (isGameOver) {
+        if (playerHealth <= 0) {
+            active = false;
             showGameOverScreen = true;
         }
     }
@@ -705,69 +706,6 @@ void SpawnEnemy(glm::vec2 position, float spawnInterval, EnemyType type = EnemyT
 }
 
 
-void CheckCollisions(Player& player) {
-    for (auto& enemy : enemies) {
-        if (player.collider.checkCollision(enemy.collider)) {
-            playerHealth--;
-            enemy.health = 0;
-            return;
-        }
-    }
-
-    for (auto& fastEnemy : fastEnemies) {
-        if (player.collider.checkCollision(fastEnemy.collider)) {
-            playerHealth--;
-            fastEnemy.health = 0;
-            return;
-        }
-    }
-
-    for (auto& bullet : bullets) {
-        for (auto& enemy : enemies) {
-            if (bullet.collider.checkCollision(enemy.collider)) {
-                enemy.health = 0;
-				bullet.active = false;
-            }
-        }
-
-        for (auto& fastEnemy : fastEnemies) {
-            if (bullet.collider.checkCollision(fastEnemy.collider)) {
-                fastEnemy.health = 0;
-                bullet.active = false;
-            }
-        }
-
-        if (bullet.collider.checkCollision(player.collider)) {
-            playerHealth--;
-            bullet.active = false;
-        }
-    }
-
-    for (size_t i = 0; i < enemies.size(); ++i) {
-        for (size_t j = i + 1; j < enemies.size(); ++j) {
-            if (enemies[i].collider.checkCollision(enemies[j].collider)) {
-                glm::vec3 direction = glm::normalize(enemies[j].position - enemies[i].position);
-                enemies[i].velocity = -direction * enemies[i].speed;
-                enemies[j].velocity = direction * enemies[j].speed;
-            }
-        }
-    }
-
-    for (size_t i = 0; i < fastEnemies.size(); ++i) {
-        for (size_t j = i + 1; j < fastEnemies.size(); ++j) {
-            if (fastEnemies[i].collider.checkCollision(fastEnemies[j].collider)) {
-                glm::vec3 direction = glm::normalize(fastEnemies[j].position - fastEnemies[i].position);
-                fastEnemies[i].velocity = -direction * fastEnemies[i].speed;
-                fastEnemies[j].velocity = direction * fastEnemies[j].speed;
-            }
-        }
-    }
-
-    enemies.erase(remove_if(enemies.begin(), enemies.end(), [](Enemy& e) { return e.health <= 0; }), enemies.end());
-    fastEnemies.erase(remove_if(fastEnemies.end(), fastEnemies.end(), [](FastEnemy& e) { return e.health <= 0; }), fastEnemies.end());
-    bullets.erase(remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return b.active == false; }), bullets.end());
-}
-
 bool CheckCollision(GameObject& one, GameObject& two) {
     // collision x-axis?
     bool collisionX = one.position.x + one.size.x >= two.position.x &&
@@ -804,6 +742,25 @@ void CheckBulletEnemyCollisions() {
     bullets.erase(remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return !b.active; }), bullets.end());
 
     // Remove dead enemies
+    enemies.erase(remove_if(enemies.begin(), enemies.end(), [](Enemy& e) { return e.health <= 0; }), enemies.end());
+}
+
+void CheckPlayerEnemyCollisions(Player& player) {
+    for (auto& enemy : enemies) {
+        if (CheckCollision(player, enemy)) {
+            std::cout << "Colisión detectada entre el jugador y el enemigo!" << std::endl;
+
+            // Desactivar al jugador (puedes establecer una bandera o mover al jugador fuera de la pantalla)
+            player.active = false;  // Supongamos que añadimos una bandera 'active' a la clase Player
+            player.position = glm::vec3(-1000.0f, -1000.0f, -1000.0f);  // Mover al jugador fuera de la pantalla
+
+            // Opcional: manejar la "muerte" del enemigo
+            enemy.health = 0;
+            break;  // Salir del bucle ya que el jugador ha colisionado
+        }
+    }
+
+    // Remover enemigos muertos
     enemies.erase(remove_if(enemies.begin(), enemies.end(), [](Enemy& e) { return e.health <= 0; }), enemies.end());
 }
 
@@ -928,6 +885,7 @@ int main()
         }
 
         CheckBulletEnemyCollisions();
+        CheckPlayerEnemyCollisions(player);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
