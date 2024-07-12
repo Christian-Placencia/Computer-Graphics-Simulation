@@ -28,6 +28,7 @@
 #include "objGen.h"
 #include "trackball.h"
 #include "shaders.h"
+#include <unordered_map>
 
 #pragma warning(disable : 4996)
 #pragma comment(lib, "glfw3.lib")
@@ -379,129 +380,11 @@ public:
 
 vector<Wall> walls;
 
-/*
-void renderPlayerHealthBar() {
-    if (!showGameOverScreen) {  // Solo muestra la barra de vida si el juego no ha terminado
-        ImGui::Begin("Salud del Jugador");  // Comienza una nueva ventana de ImGui
-
-        // Calcula el porcentaje de la vida actual en comparaci�n con la vida m�xima
-        float healthPercentage = (float)player.health / (float)player.maxHealth;
-
-        // Barra de progreso para la salud
-        ImGui::Text("Vida: %d / %d", player.health, player.maxHealth);
-        ImGui::ProgressBar(healthPercentage, ImVec2(0.0f, 0.0f), "");
-        ImGui::End();
-    }
-}
-*/
 void checkPlayerHealth() {
     // Suponiendo que 'player' es tu objeto jugador y tiene un atributo 'health'
     if (playerHealth <= 0) {
         showGameOverScreen = true;  // Activar la pantalla de Game Over
     }
-}
-
-
-/*
-void renderGameOverScreen() {
-    if (showGameOverScreen) {
-        // Centrar la ventana de Game Over en la pantalla
-        ImGui::SetNextWindowPos(ImVec2(960, 540), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-        ImGui::SetNextWindowSize(ImVec2(400, 200)); // Tama�o de la ventana
-
-        ImGui::Begin("Game Over", &showGameOverScreen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-
-        // Texto centrado en la ventana
-        ImGui::Text("Game Over");
-        ImGui::Text("Has perdido toda la vida!");
-
-        // Bot�n para reiniciar el juego o cerrar la pantalla de Game Over
-        if (ImGui::Button("Reiniciar", ImVec2(120, 50))) {
-            // Reiniciar el juego (resetear la salud del jugador y otros estados necesarios)
-            player.health = 10; // Suponiendo que 10 es la salud m�xima
-            // Restablecer la posici�n del jugador y otras variables necesarias
-            player.position = glm::vec3(0, 0, 0);  // Ejemplo de reinicio de posici�n
-            showGameOverScreen = false;  // Cerrar la pantalla de Game Over
-        }
-
-        // Bot�n para salir del juego (opcional)
-        ImGui::SameLine();
-        if (ImGui::Button("Salir", ImVec2(120, 50))) {
-            glfwSetWindowShouldClose(window, GL_TRUE); // Suponiendo que 'window' es tu ventana GLFW
-        }
-
-        ImGui::End();
-    }
-}*/
-
-//Health bar
-
-
-void renderImGui() {
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-    ImGui::Begin("Player HP");
-    ImGui::Text("HP: %d", playerHealth);
-
-    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
-    ImGui::ProgressBar((float)playerHealth / 10.0f);
-    ImGui::PopStyleColor();
-    ImGui::PopStyleVar();
-
-    ImGui::End();
-}
-
-void renderUI() {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-    // Renderiza la barra de vida del jugador si el juego no ha terminado
-    if (!showGameOverScreen && playerHealth > 0) {
-        ImGui::Begin("Salud del Jugador");  // Comienza una nueva ventana de ImGui
-
-        // Calcula el porcentaje de la vida actual en comparaci�n con la vida m�xima
-        float healthPercentage = (float)playerHealth / (float)maxPlayerHealth;
-
-        // Barra de progreso para la salud
-        ImGui::Text("Vida: %d / %d", playerHealth, maxPlayerHealth);
-        ImGui::ProgressBar(healthPercentage, ImVec2(-1.0f, 0.0f), "");  // -1.0f para usar toda la anchura de la ventana
-        ImGui::End();
-    }
-
-    // Renderizar la pantalla de Game Over si es necesario
-    if (showGameOverScreen) {
-        // Centrar la ventana de Game Over en la pantalla
-        ImGui::SetNextWindowPos(ImVec2(960, 540), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-        ImGui::SetNextWindowSize(ImVec2(400, 200)); // Tama�o de la ventana
-
-        ImGui::Begin("Game Over", &showGameOverScreen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-
-        // Texto centrado en la ventana
-        ImGui::Text("Game Over");
-        ImGui::Text("Has perdido toda la vida!");
-
-        // Bot�n para reiniciar el juego o cerrar la pantalla de Game Over
-        if (ImGui::Button("Reiniciar", ImVec2(120, 50))) {
-            // Reiniciar el juego (resetear la salud del jugador y otros estados necesarios)
-            playerHealth = 10; // Suponiendo que 10 es la salud m�xima
-            playerPos = glm::vec3(0, 0, 0);  // Ejemplo de reinicio de posici�n
-            showGameOverScreen = false;  // Cerrar la pantalla de Game Over
-        }
-
-        // Bot�n para salir del juego (opcional)
-        ImGui::SameLine();
-        if (ImGui::Button("Salir", ImVec2(120, 50))) {
-            glfwSetWindowShouldClose(window, GL_TRUE); // Suponiendo que 'window' es tu ventana GLFW
-        }
-
-        ImGui::End();
-    }
-
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void LoadTexture()
@@ -821,10 +704,7 @@ void SpawnEnemy(glm::vec2 position, float spawnInterval, EnemyType type = EnemyT
     }
 }
 
-// ! Will be sped up by the more efficient collision detection
-// TODO: Use parallel for loop to check collisions with open mp
-// ! Check bullet-enemy collisions first, then enemy-player collisions, change order by priority
-// TODO: Chance enemy velocity direction on enemy-enemy collision (bounce). Take the x and y and put them to minus.
+
 void CheckCollisions(Player& player) {
     for (auto& enemy : enemies) {
         if (player.collider.checkCollision(enemy.collider)) {
@@ -886,6 +766,45 @@ void CheckCollisions(Player& player) {
     enemies.erase(remove_if(enemies.begin(), enemies.end(), [](Enemy& e) { return e.health <= 0; }), enemies.end());
     fastEnemies.erase(remove_if(fastEnemies.end(), fastEnemies.end(), [](FastEnemy& e) { return e.health <= 0; }), fastEnemies.end());
     bullets.erase(remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return b.active == false; }), bullets.end());
+}
+
+bool CheckCollision(GameObject& one, GameObject& two) {
+    // collision x-axis?
+    bool collisionX = one.position.x + one.size.x >= two.position.x &&
+        two.position.x + two.size.x >= one.position.x;
+    // collision y-axis?
+    bool collisionY = one.position.y + one.size.y >= two.position.y &&
+        two.position.y + two.size.y >= one.position.y;
+    // collision z-axis?
+    bool collisionZ = one.position.z + one.size.z >= two.position.z &&
+        two.position.z + two.size.z >= one.position.z;
+    // collision only if on all three axes
+    return collisionX && collisionY && collisionZ;
+}
+
+void CheckBulletEnemyCollisions() {
+    for (auto& bullet : bullets) {
+        if (!bullet.active) continue;
+
+        for (auto& enemy : enemies) {
+            if (CheckCollision(bullet, enemy)) {
+                bullet.active = false;  // Deactivate the bullet
+                enemy.health -= 1;  // Reduce enemy health
+                std::cout << "Collision detected between bullet and enemy\n" << std::endl;
+
+                if (enemy.health <= 0) {
+                    std::cout << "Enemy killed!" << std::endl;
+                }
+                break;  // Exit the inner loop since this bullet is no longer active
+            }
+        }
+    }
+
+    // Remove inactive bullets
+    bullets.erase(remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return !b.active; }), bullets.end());
+
+    // Remove dead enemies
+    enemies.erase(remove_if(enemies.begin(), enemies.end(), [](Enemy& e) { return e.health <= 0; }), enemies.end());
 }
 
 // TODO: Consider have each object have a check collision function
@@ -1008,7 +927,7 @@ int main()
             bullets[i].render();
         }
 
-        CheckCollisions(player);
+        CheckBulletEnemyCollisions();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
