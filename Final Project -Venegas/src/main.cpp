@@ -79,6 +79,8 @@ GLuint VAO, VBO;
 glm::vec3 playerPos(0.0f, 0.0f, 0.0f);
 float deltaTime = 0;
 float currentFrame;
+int maxPlayerHealth = 10;
+int playerHealth = maxPlayerHealth;
 
 enum class EnemyType {
     NORMAL,
@@ -213,8 +215,6 @@ std::vector<Bullet> bullets;
 
 class Player : public GameObject {
 public:
-    int health = 10;
-    int maxHealth = 10; // For UI purposes 
     float speed = 5.0f;
     float bulletReloadSpeed = 0.2f;
     float reloadTimer = 0.0f;
@@ -224,9 +224,9 @@ public:
         : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 0.2), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0)) {}
 
     void takeDamage(int damage) {
-        health -= damage;
-        if (health <= 0) {
-            health = 0;
+        playerHealth -= damage;
+        if (playerHealth <= 0) {
+            playerHealth = 0;
             isGameOver = true;
         }
     }
@@ -304,7 +304,7 @@ void renderPlayerHealthBar() {
 */
 void checkPlayerHealth() {
     // Suponiendo que 'player' es tu objeto jugador y tiene un atributo 'health'
-    if (player.health <= 0) {
+    if (playerHealth <= 0) {
         showGameOverScreen = true;  // Activar la pantalla de Game Over
     }
 }
@@ -367,14 +367,14 @@ void renderUI() {
     ImGui::NewFrame();
 
     // Renderiza la barra de vida del jugador si el juego no ha terminado
-    if (!showGameOverScreen && player.health > 0) {
+    if (!showGameOverScreen && playerHealth > 0) {
         ImGui::Begin("Salud del Jugador");  // Comienza una nueva ventana de ImGui
 
         // Calcula el porcentaje de la vida actual en comparación con la vida máxima
-        float healthPercentage = (float)player.health / (float)player.maxHealth;
+        float healthPercentage = (float)playerHealth / (float)maxPlayerHealth;
 
         // Barra de progreso para la salud
-        ImGui::Text("Vida: %d / %d", player.health, player.maxHealth);
+        ImGui::Text("Vida: %d / %d", playerHealth, maxPlayerHealth);
         ImGui::ProgressBar(healthPercentage, ImVec2(-1.0f, 0.0f), "");  // -1.0f para usar toda la anchura de la ventana
         ImGui::End();
     }
@@ -394,8 +394,8 @@ void renderUI() {
         // Botón para reiniciar el juego o cerrar la pantalla de Game Over
         if (ImGui::Button("Reiniciar", ImVec2(120, 50))) {
             // Reiniciar el juego (resetear la salud del jugador y otros estados necesarios)
-            player.health = 10; // Suponiendo que 10 es la salud máxima
-            player.position = glm::vec3(0, 0, 0);  // Ejemplo de reinicio de posición
+            playerHealth = 10; // Suponiendo que 10 es la salud máxima
+            playerPos = glm::vec3(0, 0, 0);  // Ejemplo de reinicio de posición
             showGameOverScreen = false;  // Cerrar la pantalla de Game Over
         }
 
@@ -792,7 +792,7 @@ void SpawnEnemy(glm::vec2 position, float spawnInterval, EnemyType type = EnemyT
 void CheckCollisions(Player& player) {
     for (auto& enemy : enemies) {
         if (player.collider.checkCollision(enemy.collider)) {
-            player.health--;
+            playerHealth--;
             enemy.health = 0;
             return;
         }
@@ -800,7 +800,7 @@ void CheckCollisions(Player& player) {
 
     for (auto& fastEnemy : fastEnemies) {
         if (player.collider.checkCollision(fastEnemy.collider)) {
-            player.health--;
+            playerHealth--;
             fastEnemy.health = 0;
             return;
         }
@@ -824,7 +824,7 @@ void CheckCollisions(Player& player) {
         }
 
         if (bullet.collider.checkCollision(player.collider)) {
-            player.health--;
+            playerHealth--;
             bullet.collider.radius = 0;
         }
     }
