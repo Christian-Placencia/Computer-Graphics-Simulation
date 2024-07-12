@@ -87,23 +87,33 @@ enum class EnemyType {
     FAST
 };
 
+enum class Shape {
+	SPHERE,
+	CUBE
+};
+
 // Clase Collider para manejar colisiones
 class Collider {
+private:
+    const glm::vec3* positionPtr;
+	float* radius;
+
 public:
-    glm::vec3 position;
-    float radius;
+    Collider(const glm::vec3* posPtr, float* r) : positionPtr(posPtr), radius(r) {}
 
-    Collider(glm::vec3 pos, float r) : position(pos), radius(r) {}
-
-    bool checkCollision(const Collider& other) {
-        float distance = glm::distance(position, other.position);
-        return distance < (radius + other.radius);
-
-        // TODO: Calculate the square distance instead of glm::distance
-        // TODO: radius2 = radius * radius, implement internal variable
-        // glm::vec3 temp = A - B;
-        // float distSqr = dot(temp, temp);
+    bool checkCollision(const Collider& other) const {
+        float distance = glm::distance(*positionPtr, *other.positionPtr);
+        return distance < (*radius + *other.radius);
     }
+
+    const glm::vec3& getPosition() const {
+        return *positionPtr;
+    }
+
+    // TODO: Calculate the square distance instead of glm::distance
+    // TODO: radius2 = radius * radius, implement internal variable
+    // glm::vec3 temp = A - B;
+    // float distSqr = dot(temp, temp);
 };
 
 // Function prototypes
@@ -121,10 +131,9 @@ public:
 
     GameObject(glm::vec3 pos, glm::vec3 sz, float colliderRadius, GLuint tex, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
         : position(pos), size(sz), texture(tex), ambientColor(ambient), diffuseColor(diffuse), specularColor(specular),
-        velocity(0.0f), rotation(0.0f), collider(pos, colliderRadius) {}
+        velocity(0.0f), rotation(0.0f), collider(&position, &size[0]) {}
 
     virtual void update() {
-        collider.position = position;
     }
 
     virtual void render() {
@@ -172,13 +181,14 @@ public:
 
 class Bullet : public GameObject {
 public:
+    bool active = true;
+
     Bullet(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
         : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0)) {}
 
 
     void update() override {
         position += velocity * deltaTime;
-        collider.position = position;
         //handleWallCollision();
     }
 
@@ -812,20 +822,20 @@ void CheckCollisions(Player& player) {
         for (auto& enemy : enemies) {
             if (bullet.collider.checkCollision(enemy.collider)) {
                 enemy.health = 0;
-                bullet.collider.radius = 0;
+				bullet.active = false;
             }
         }
 
         for (auto& fastEnemy : fastEnemies) {
             if (bullet.collider.checkCollision(fastEnemy.collider)) {
                 fastEnemy.health = 0;
-                bullet.collider.radius = 0;
+                bullet.active = false;
             }
         }
 
         if (bullet.collider.checkCollision(player.collider)) {
             playerHealth--;
-            bullet.collider.radius = 0;
+            bullet.active = false;
         }
     }
 
@@ -851,7 +861,7 @@ void CheckCollisions(Player& player) {
 
     enemies.erase(remove_if(enemies.begin(), enemies.end(), [](Enemy& e) { return e.health <= 0; }), enemies.end());
     fastEnemies.erase(remove_if(fastEnemies.end(), fastEnemies.end(), [](FastEnemy& e) { return e.health <= 0; }), fastEnemies.end());
-    bullets.erase(remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return b.collider.radius == 0; }), bullets.end());
+    bullets.erase(remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return b.active == false; }), bullets.end());
 }
 
 // TODO: Consider have each object have a check collision function
@@ -863,7 +873,7 @@ void checkBulletCollisions(std::vector<Bullet>& bullets, std::vector<Enemy>& ene
         for (auto& enemy : enemies) {
             if (bullet.collider.checkCollision(enemy.collider)) {
                 enemy.health = 0; // Mark enemy for removal
-                bullet.collider.radius = 0; // Mark bullet for removal
+                bullet.active = false; // Mark bullet for removal
             }
         }
 
@@ -871,7 +881,7 @@ void checkBulletCollisions(std::vector<Bullet>& bullets, std::vector<Enemy>& ene
         for (auto& fastEnemy : fastEnemies) {
             if (bullet.collider.checkCollision(fastEnemy.collider)) {
                 fastEnemy.health = 0; // Mark fast enemy for removal
-                bullet.collider.radius = 0; // Mark bullet for removal
+                bullet.active = false; // Mark bullet for removal
             }
         }
     }
@@ -881,7 +891,7 @@ void checkBulletCollisions(std::vector<Bullet>& bullets, std::vector<Enemy>& ene
     fastEnemies.erase(remove_if(fastEnemies.begin(), fastEnemies.end(), [](FastEnemy& e) { return e.health <= 0; }), fastEnemies.end());
 
     // Remove bullets that have collided
-    bullets.erase(remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return b.collider.radius == 0; }), bullets.end());
+    bullets.erase(remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return b.active == false; }), bullets.end());
 }
 
 int main()
