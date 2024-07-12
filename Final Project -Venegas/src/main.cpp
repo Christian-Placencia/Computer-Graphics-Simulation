@@ -82,17 +82,19 @@ static bool textureLoaded = false;
 // Render settings
 int subdivision = 10;
 GLuint VAO, VBO;
-
-
+GLuint sphereVAO, sphereVBO;
+GLuint rectPrismVAO, rectPrismVBO;
+GLuint circleVAO, circleVBO;
 
 enum class EnemyType {
     NORMAL,
     FAST
 };
 
-enum class Shape {
+enum Shape {
 	SPHERE,
-	CUBE
+	PRISM,
+    CIRCLE
 };
 
 // Clase Collider para manejar colisiones
@@ -135,10 +137,10 @@ public:
     GLuint texture;
     glm::vec3 ambientColor, diffuseColor, specularColor;
     Collider collider;
+    Shape shape;
 
-    GameObject(glm::vec3 pos, glm::vec3 sz, float colliderRadius, GLuint tex, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
-        : position(pos), size(sz), texture(tex), ambientColor(ambient), diffuseColor(diffuse), specularColor(specular),
-        velocity(0.0f), rotation(0.0f), collider(&position, &size[0]) {}
+    GameObject(glm::vec3 pos, glm::vec3 sz, float colliderRadius, GLuint tex, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, Shape shp)
+        : position(pos), size(sz), texture(tex), ambientColor(ambient), diffuseColor(diffuse), specularColor(specular), velocity(0.0f), rotation(0.0f), collider(&position, &size[0]), shape(shp) {}
 
     virtual void update() {
     }
@@ -159,6 +161,16 @@ public:
         glUniform3fv(kdParameter, 1, glm::value_ptr(diffuseColor));
         glUniform3fv(ksParameter, 1, glm::value_ptr(specularColor));
         glUniform1fv(shParameter, 1, &sh);
+
+        if (shape == SPHERE) {
+            glBindVertexArray(sphereVAO);
+        }
+        else if (shape == PRISM) {
+            glBindVertexArray(rectPrismVAO);
+        }
+        else if (shape == CIRCLE) {
+            glBindVertexArray(circleVAO);
+        }
 
         glDrawArrays(GL_TRIANGLES, 0, points / 3);
     }
@@ -191,7 +203,7 @@ public:
     bool active = true;
 
     Bullet(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
-        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0)) {}
+        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), SPHERE) {}
 
 
     void update() override {
@@ -238,7 +250,7 @@ public:
     bool isGameOver = false;
 
     Player(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
-        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 0.2), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0)) {}
+        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0, 0.2), glm::vec3(0, 0, 1), glm::vec3(1, 1, 0), SPHERE) {}
 
     void takeDamage(int damage) {
         playerHealth -= damage;
@@ -303,6 +315,77 @@ public:
         return objCoord;
     }
 };
+
+class Enemy : public GameObject {
+public:
+    int health = 2;
+    float speed = 3.0f;
+
+    // Normal enemy is green
+    Enemy(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
+        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0.2, 0), glm::vec3(0, 1, 0), glm::vec3(1, 1, 0), SPHERE) {}
+
+    void update() override {
+        GameObject::update();
+        glm::vec3 direction = playerPos - position;
+        float length = glm::length(direction);
+        if (length != 0) {
+            direction /= length;
+        }
+        position += direction * speed * deltaTime;
+        handleWallCollision();
+    }
+
+    void handleWallCollision() {
+        if (position.x <= bounds[0] || position.x >= bounds[1]) {
+            velocity.x = -velocity.x;
+        }
+        if (position.z <= bounds[2] || position.z >= bounds[3]) {
+            velocity.z = -velocity.z;
+        }
+    }
+};
+
+class FastEnemy : public GameObject {
+public:
+    int health = 3;
+    float speed = 5.0f;
+
+    // Fast enemy is red
+    FastEnemy(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
+        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0.2, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 1, 0), SPHERE) {}
+
+    void update() override {
+        GameObject::update();
+        glm::vec3 direction = playerPos - position;
+        float length = glm::length(direction);
+        if (length != 0) {
+            direction /= length;
+        }
+        position += direction * speed * deltaTime;
+        handleWallCollision();
+    }
+
+    void handleWallCollision() {
+        if (position.x <= bounds[0] || position.x >= bounds[1]) {
+            velocity.x = -velocity.x;
+        }
+        if (position.z <= bounds[2] || position.z >= bounds[3]) {
+            velocity.z = -velocity.z;
+        }
+    }
+};
+
+std::vector<Enemy> enemies;
+std::vector<FastEnemy> fastEnemies;
+
+class Wall : public GameObject {
+public:
+    Wall(glm::vec3 pos, glm::vec3 sz)
+        : GameObject(pos, sz, 1.0f, 1, glm::vec3(1, 1, 1), glm::vec3(1, 1, 1), glm::vec3(1, 1, 1), PRISM) {}
+};
+
+vector<Wall> walls;
 
 /*
 void renderPlayerHealthBar() {
@@ -428,110 +511,6 @@ void renderUI() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
-
-class Enemy : public GameObject {
-public:
-    int health = 2;
-    float speed = 3.0f;
-
-    // Normal enemy is green
-    Enemy(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
-        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0, 0.2, 0), glm::vec3(0, 1, 0), glm::vec3(1, 1, 0)) {}
-
-    void update() override {
-        GameObject::update();
-        glm::vec3 direction = playerPos - position;
-        float length = glm::length(direction);
-        if (length != 0) {
-            direction /= length;
-        }
-        position += direction * speed * deltaTime;
-        handleWallCollision();
-    }
-
-    void handleWallCollision() {
-        if (position.x <= bounds[0] || position.x >= bounds[1]) {
-            velocity.x = -velocity.x;
-        }
-        if (position.z <= bounds[2] || position.z >= bounds[3]) {
-            velocity.z = -velocity.z;
-        }
-    }
-};
-
-class FastEnemy : public GameObject {
-public:
-    int health = 3;
-    float speed = 5.0f;
-
-    // Fast enemy is red
-    FastEnemy(glm::vec3 pos, glm::vec3 sz, float colliderRadius)
-        : GameObject(pos, sz, colliderRadius, 1, glm::vec3(0.2, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 1, 0)) {}
-
-    void update() override {
-        GameObject::update();
-        glm::vec3 direction = playerPos - position;
-        float length = glm::length(direction);
-        if (length != 0) {
-            direction /= length;
-        }
-        position += direction * speed * deltaTime;
-        handleWallCollision();
-    }
-
-    void handleWallCollision() {
-        if (position.x <= bounds[0] || position.x >= bounds[1]) {
-            velocity.x = -velocity.x;
-        }
-        if (position.z <= bounds[2] || position.z >= bounds[3]) {
-            velocity.z = -velocity.z;
-        }
-    }
-};
-
-std::vector<Enemy> enemies;
-std::vector<FastEnemy> fastEnemies;
-
-class Wall : public GameObject {
-public:
-    Wall(glm::vec3 pos, glm::vec3 sz)
-        : GameObject(pos, sz, 1.0f, 1, glm::vec3(1, 1, 1), glm::vec3(1, 1, 1), glm::vec3(1, 1, 1)) {}
-
-    void update() override {
-        // Walls are static
-    }
-
-    void render() override {
-        vector<GLfloat> v;
-        CreateRectPrism(&v, size.x, size.y, size.z, 1.0f, 1.0f, subdivision);
-
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-
-        glBindVertexArray(VAO);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        points = v.size();
-        glBufferData(GL_ARRAY_BUFFER, points * sizeof(GLfloat), &v[0], GL_STATIC_DRAW);
-        v.clear();
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-        glEnableVertexAttribArray(2);
-
-        if (!textureLoaded) {
-            LoadTexture();
-            textureLoaded = true;
-        }
-
-        GameObject::render();
-    }
-};
-
-vector<Wall> walls;
 
 void LoadTexture()
 {
@@ -707,22 +686,44 @@ void CreateRectPrism(vector<GLfloat>* a, float width, float height, float depth,
     AddFace(a, p0, p1, p5, p4, normalBottom, u, v, n);
 }
 
-// Build the scene
-// TODO: Add another parameter to define if the object is a wall or not
-// TODO: Base class that only build variables, vertex array and vertex buffer objects, and render function
-void BuildScene(float uu, float vv, int subdiv, int scene) {
-    vector<GLfloat> v;
-    CreateRevo(&v, uu, vv, subdiv, scene);
+void CreateCircle(std::vector<GLfloat>* vertices, float radius, int segments) {
+    vertices->clear();
+    for (int i = 0; i <= segments; ++i) {
+        float theta = 2.0f * 3.1415926f * float(i) / float(segments); // get the current angle
+        float x = radius * cosf(theta); // calculate the x component
+        float y = radius * sinf(theta); // calculate the y component
 
-    // ! This is where we rebind them, remember the sphere ones and the cube ones
+        vertices->push_back(x);
+        vertices->push_back(y);
+        vertices->push_back(0.0f); // z component is 0 for 2D circle
+        // Optional: Add other vertex attributes like normals and texture coordinates here
+        vertices->push_back(0.0f); // normal x
+        vertices->push_back(0.0f); // normal y
+        vertices->push_back(1.0f); // normal z
+        vertices->push_back(x / (2.0f * radius) + 0.5f); // texture x
+        vertices->push_back(y / (2.0f * radius) + 0.5f); // texture y
+    }
+}
+
+void BuildScene(float uu, float vv, int subdiv, int scene, Shape shape) {
+    vector<GLfloat> v;
+
+    if (shape == SPHERE) {
+        CreateRevo(&v, uu, vv, subdiv, scene);
+    }
+    else if (shape == PRISM) {
+        CreateRectPrism(&v, 10.0f, 10.0f, 10.0f, uu, vv, subdiv);
+    }
+    else if (shape == CIRCLE) {
+        CreateCircle(&v, uu, subdiv);  // uu as radius and subdiv as segments
+    }
+
+    GLuint VAO, VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
-    // These values should be different for each object
-    // TODO: 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO); 
-
 
     points = v.size();
     glBufferData(GL_ARRAY_BUFFER, points * sizeof(GLfloat), &v[0], GL_STATIC_DRAW);
@@ -739,7 +740,20 @@ void BuildScene(float uu, float vv, int subdiv, int scene) {
         LoadTexture();
         textureLoaded = true;
     }
+
+    // Store the VAO and VBO for rendering later
+    if (shape == SPHERE) {
+        sphereVAO = VAO;
+        sphereVBO = VBO;
+    } else if (shape == PRISM) {
+        rectPrismVAO = VAO;
+        rectPrismVBO = VBO;
+    } else if (shape == CIRCLE) {
+        circleVAO = VAO;
+        circleVBO = VBO;
+    }
 }
+
 
 // Mouse and keyboard callback
 void MouseCallback(GLFWwindow* window, double x, double y) {
@@ -945,7 +959,9 @@ int main()
     glViewport(0, 0, screenWidth, screenHeight);
 
     InitShaders(&shaderProg);
-    BuildScene(1, 1, subdivision, scene);
+    BuildScene(1, 1, subdivision, scene, SPHERE);
+    //BuildScene(1, 1, subdivision, scene, PRISM);
+    //BuildScene(1, 1, subdivision, scene, CIRCLE);
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
